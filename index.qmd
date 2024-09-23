@@ -1,13 +1,5 @@
 ---
-title: "teito7000.github.io"
+title: "Ahasan Bhuiyan"
 ---
 
-Do edits get saved?
-
-This is a Quarto website.
-
-To learn more about Quarto websites visit <https://quarto.org/docs/websites>.
-
-```{r}
-1 + 1
-```
+Coming soon!

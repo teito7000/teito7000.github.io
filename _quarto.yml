@@ -3,12 +3,15 @@ project:
   output-dir: docs
 
 website:
-  title: "teito7000.github.io"
+  title: "teito7000"
   navbar:
     left:
-      - href: index.qmd
-        text: Home
-      - about.qmd
+      # Remove home page
+      # - href: index.qmd
+        # text: Home
+      - projects.qmd
+      # Remove about page (for now)
+      # - about.qmd
 
 format:
   html:
