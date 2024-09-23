@@ -6,12 +6,13 @@ website:
   title: "teito7000"
   navbar:
     left:
+      - projects.qmd
       # Remove home page
       # - href: index.qmd
         # text: Home
-      - projects.qmd
-      # Remove about page (for now)
-      # - about.qmd
+  page-footer:
+    center:
+      "© 2024 Ahasan Bhuiyan"
 
 format:
   html:
