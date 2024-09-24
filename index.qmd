@@ -1,5 +1,17 @@
 ---
 title: "Ahasan Bhuiyan"
+image: files/profile.jpg
+about:
+  template: jolla
+  image-shape: round
+  image-width: 15em
+  links: 
+    - icon: linkedin
+      text: LinkedIn
+      href: https://www.linkedin.com/in/ahasanb/
+    - icon: github
+      text: GitHub
+      href: https://github.com/teito7000
 ---
 
-Coming soon!
+Mechatronic Systems Engineering student at Simon Fraser University. I love learning about transportation systems and data analysis!
