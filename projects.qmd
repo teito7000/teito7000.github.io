@@ -1,5 +1,26 @@
 ---
 title: "Projects"
+
+listing:
+  
+  # List contents in project directory
+  contents: projects
+  
+  # Choose grid type of listing
+  type: grid
+  
+  # select which fields to display per listing
+  fields: [image, date, title, categories, description]
+  
+  # List the entries in descending order by date
+  sort: "date desc"
+  
+  # Display categories in alphabetical order
+  # Display the number of items beside category
+  categories: numbered
+  
+
+page-layout: full
 ---
 
-Coming soon!
+A collection of projects I've worked on either in university or in my free time.
