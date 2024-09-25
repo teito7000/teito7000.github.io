@@ -6,7 +6,8 @@ website:
   title: "teito7000"
   navbar:
     left:
-      - projects.qmd
+      - href: projects.qmd
+        text: Projects
       # Remove home page
       # - href: index.qmd
         # text: Home
