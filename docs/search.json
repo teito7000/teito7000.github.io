@@ -1,51 +1,9 @@
 [
   {
-    "objectID": "index.html",
-    "href": "index.html",
-    "title": "Ahasan Bhuiyan",
-    "section": "",
-    "text": "Mechatronic Systems Engineering student at Simon Fraser University. I love learning about transportation systems and data analysis!"
-  },
-  {
-    "objectID": "about.html",
-    "href": "about.html",
-    "title": "About",
-    "section": "",
-    "text": "About this site\n\n1 + 1\n\n[1] 2"
-  },
-  {
     "objectID": "projects.html",
     "href": "projects.html",
-    "title": "Projects",
+    "title": "teito7000",
     "section": "",
-    "text": "A collection of projects I’ve worked on either in university or in my free time.\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nNo matching items"
-  },
-  {
-    "objectID": "projects/2023/automatic_block_signalling/automatic_block_signalling.html",
-    "href": "projects/2023/automatic_block_signalling/automatic_block_signalling.html",
-    "title": "Automatic Block Signalling for a Model Railway",
-    "section": "",
-    "text": "An integral part towards achieving safe railway operation is to have a signalling system that prevents unsafe train movements. Key functions can include ensuring a safe separation distance between trains and prohibiting trains from taking a conflicting route, such as a section of track that is already occupied. Signalling systems are of particular interest to me because they require integration of several components, from train detection to robust control algorithms.\n\n\nI was preparing for my IRSE Professional Exam (railway systems engineering) during the summer of 2023, so I thought it was a good time to try to create a small signalling system for a model railway. The technical requirements for the project were as follows:\n\n\nBe able to detect the presence of trains within a defined block section\nEnable LED signals to accurately display the state of a block section (e.g., occupied or vacant)\nIntegrate sensors that did not require significant modification of the model railway\nMake a modular system that can easier be extended for longer lengths or varying sizes of block sections"
-  },
-  {
-    "objectID": "projects/2023/automatic_block_signalling/automatic_block_signalling.html#background",
-    "href": "projects/2023/automatic_block_signalling/automatic_block_signalling.html#background",
-    "title": "Automatic Block Signalling for a Model Railway",
-    "section": "",
-    "text": "An integral part towards achieving safe railway operation is to have a signalling system that prevents unsafe train movements. Key functions can include ensuring a safe separation distance between trains and prohibiting trains from taking a conflicting route, such as a section of track that is already occupied. Signalling systems are of particular interest to me because they require integration of several components, from train detection to robust control algorithms.\n\n\nI was preparing for my IRSE Professional Exam (railway systems engineering) during the summer of 2023, so I thought it was a good time to try to create a small signalling system for a model railway. The technical requirements for the project were as follows:\n\n\nBe able to detect the presence of trains within a defined block section\nEnable LED signals to accurately display the state of a block section (e.g., occupied or vacant)\nIntegrate sensors that did not require significant modification of the model railway\nMake a modular system that can easier be extended for longer lengths or varying sizes of block sections"
-  },
-  {
-    "objectID": "projects/2023/automatic_block_signalling/automatic_block_signalling.html#system-design",
-    "href": "projects/2023/automatic_block_signalling/automatic_block_signalling.html#system-design",
-    "title": "Automatic Block Signalling for a Model Railway",
-    "section": "System Design",
-    "text": "System Design\n\nI did some research to see if anyone else had tried to use Arduino as part of a railway signalling system. One of the most promising applications was from a YouTube video that used infrared (IR) sensors as triggers for when a train enters a section of track, referred to as a block. IR sensors can be placed adjacent to the track, whereas another popular sensor type, current sensors, required modifications to the track to electrically isolate each section. Based on this advantage, I chose to incorporate IR sensors into my design.\n\n\nEach block section had two IR sensors, one at each end. If either sensor was triggered, it meant that a train had entered the block. By examining which sensor was activated first, the Arduino could determine the direction from which the train entered the block. This was the entry sensor. Leading on from that, the system could determine when the train left the block section by noting the moment when the entry sensor was no longer triggered and the other sensor for that block, the exit sensor, was initiated. Of course, depending on the direction of travel, the roles of entry and exit sensor switch.\n\n\nAdditionally, voltage level logic was used as a basic form of communication between blocks to let adjacent blocks know that they are occupied, i.e., a train is present in that section. This is critical because adjacent blocks can convey this information to the train via signals, informing the (nonexistent in this case) driver to perhaps adopt a slower speed limit since they may have to stop by the time the train reaches the adjacent section. Combining all of the aforementioned logic, each block could be said to be in one of five states at any given point. Each state shows whether trains from each direction can safety enter the block. Please refer to Table 1 for an overview of the possible states and Fig. 1 for a flowchart describing how the system moves from one state to another.\n\n\nTable 1. Possible block states.\n\n\n\n\n\n\n\n\nState\nMeaning\nCan trains enter from the left?\nCan trains enter from the right?\n\n\n\n\nGreen-Green\nBlock and adjacent blocks are clear\nYes\nYes\n\n\nGreen-Yellow\nBlock is clear, but the block to the left is occupied\nYes\nYes, but with caution/reduced speed\n\n\nYellow-Green\nBlock is clear, but the block to the right is occupied\nYes, but with caution/reduced speed\nYes\n\n\nYellow-Yellow\nEITHER block is clear but both adjacent blocks are occupied OR block was only recently cleared\nYes, but with caution/reduced speed\nYes, but with caution/reduced speed\n\n\nRed-Red\nBlock is occupied\nNo\nNo\n\n\n\n\n\n\nFigure 1. System flowchart.\n\n\n\nThe physical wiring involved for a single block section required two IR sensors, LEDs for signals, along with connections to adjacent blocks for transmitting and receiving states. Since my demo setup had only one block section, I simulated connections to neighbouring blocks using a DIP switch block. Fig. 2 illustrates the entire setup for a single block.\n\n\n\n\nFigure 2. Physical setup."
-  },
-  {
-    "objectID": "projects/2023/automatic_block_signalling/automatic_block_signalling.html#software-design",
-    "href": "projects/2023/automatic_block_signalling/automatic_block_signalling.html#software-design",
-    "title": "Automatic Block Signalling for a Model Railway",
-    "section": "Software Design",
-    "text": "Software Design\n\nThe Arduino code for this project revolved around switching from one state to another based on the sensor input.\n\n\nUpon startup, the system gets the nominal value of the IR sensors with no train present. This is done by taking the average value of 1000 sensor samples. When figuring out if a sensor has been triggered by a passing train during regular operation, the difference between the nominal sensor value and current sensor value is calculated. The absolute value of this number is then compared to a set threshold. If the difference is greater than the threshold, a train has been detected.\n\n\nThe state of the system at any given time depends on both the previous state as well as the sensor input. States are saved in an enum, and the enum element changes based on the logic seen in Fig. 1. For each state, an appropriate combination of LEDs are enabled (similar to a traffic light) using a switch expression and adjacent blocks may receive a voltage signal. Several optimizations were done throughout the testing phase, such as removing redundant sensor readings.\n\nThe full code can be seen here."
+    "text": "A collection of projects I’ve worked on either in university or in my free time."
   }
 ]
