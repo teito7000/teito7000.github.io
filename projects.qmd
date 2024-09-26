@@ -1,26 +1,31 @@
 ---
 title: "Projects"
-
 listing:
   
-  # List contents in project directory
+  # List contents in "projects" directory
   contents: projects
   
   # Choose grid type of listing
   type: grid
   
-  # select which fields to display per listing
+  # Select which fields to display
   fields: [image, date, title, categories, description]
   
   # List the entries in descending order by date
   sort: "date desc"
   
-  # Display categories in alphabetical order
-  # Display the number of items beside category
+  # Display categories in alphabetical order with the number of items in that category displayed next to the category name
   categories: numbered
   
-
+  # Stop sort UI from being displayed
+  sort-ui: false
+  
+  # Stop filtering UI from being displayed
+  filter-ui: false
+  
+#
 page-layout: full
+  
 ---
 
 A collection of projects I've worked on either in university or in my free time.
