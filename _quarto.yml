@@ -20,7 +20,7 @@ format:
     theme: 
       - cosmo
       - custom_styles.scss
-    css: styles.css
+    # css: styles.css
     toc: true
 
 

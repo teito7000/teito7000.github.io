@@ -1,9 +1,0 @@
----
-title: "Automatic Block Signalling for a Model Railway"
-date: "2023-08-12"
-categories:
-  - C
-  - railway signalling
-description: "Train detection and signal control system controlled by an Arduino"
-page-layout: full
----

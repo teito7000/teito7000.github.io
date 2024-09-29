@@ -1,1 +1,11 @@
 /* css styles */
+p {
+  text-align: justify;
+}
+
+.caption {
+  color: grey;
+  font-style: normal;
+  text-align: center;
+  font-size: 0.9em;
+}
