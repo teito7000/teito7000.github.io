@@ -1,0 +1,342 @@
+---
+title: "Metro Vancouver Bus Performance Analysis"
+date: "2024-02-08"
+categories:
+  - data
+  - map
+  - transit
+description: "Analysis of scheduled bus speeds with respect to stop spacing"
+page-layout: full
+format:
+  html:
+    css: ../../../styles.css
+---
+
+Work in progress!
+
+## Introduction
+
+One of the keys to enabling a competitive public transit system is speed, and consequently, travel time. Slower speeds may be a symptom of unpredictable service, eroding confidence and pushing people towards alternative modes which save travel time albeit with potentially higher costs.[^1] Additionally, a transportation option that does not value people's time deters potential riders away from ever considering it. To achieve ambitious transit modal share targets where the majority of people choose public transportation over personal vehicles, public transit needs to be appealing to those who have the option to drive. In other words, transit travel time needs to be comparable to, or less than, that of driving. This is particularly true for mixed-traffic transit, which has to share its route with other road users.
+
+Within Metro Vancouver, buses serve as the main form of mixed-traffic transit and are mostly divided into three types: standard buses, RapidBuses, and the 99 B-Line. The purpose of this investigation was to find and compare the scheduled speed of these three bus types. An overall trend of stop spacing was identified to explain why bus speeds vary between routes and potential outliers were investigated. To provide some context, comparisons were made to see how Metro Vancouver stacks up against domestic and international counterparts. Finally, a discussion was had about how standard buses can attain better performance through infrastructure and policy restructuring.
+
+[^1]: https://view.publitas.com/translink/bus-speed-and-reliability-report-2023
+
+## Background and Methodology
+
+TransLink is the transportation authority that manages the bus network in Metro Vancouver, through their subsidiary, Coast Mountain Bus Company. The buses primarily fall into the three aforementioned categories of standard buses, RapidBuses, and the 99 B-Line. Other niche types such as highway express and community shuttle routes are grouped into the standard bus category for this analysis. 
+
+### Bus Types
+
+Standard buses comprise the majority of bus routes in the region and they typically have little infrastructure besides sign poles and possibly a bench at each stop. 
+
+RapidBuses are express buses with additional features such as all-day frequency (usually every 15 minutes or better), wider distances between stops, all-door boarding, and real-time displays at bus stops.[^2] RapidBus routes also feature a mix of bus priority measures (e.g., bus lanes, queue jumps, HOV lanes) for approximately 1/3 of their route.[^3] 
+
+Lastly, the 99 B-Line is another express bus route with frequent service and transit priority by means of bus lanes. It serves as both the progenitor for the current RapidBus routes as well as the last surviving example of the B-Line express buses. 
+
+Both the RapidBus and the 99 B-Line are characterized as "BRT-lite" routes, having some transit priority measures associated with Bus Rapid Transit, but lacking others, including signal priority and continuous dedicated bus lanes.
+
+### Data Sources
+
+The data that was examined for this analysis consisted of the 36 busiest bus routes in Metro Vancouver according to annual boardings in 2022, as found in the Transit Service Performance Review (TSPR) for that year.[^4] This includes the 99 B-Line, all 5 RapidBus routes, and 30 standard bus routes to provide a decent sample size. For each route, one direction of travel was chosen for inspection, that being the direction TransLink labels as "1". The scheduled running time, the time it takes to travel from one terminus to another, was collected for both the AM and PM peak periods (around 8 AM and 5 PM) using bus schedules issued in 2023 September.[^5] Distances were obtained from the 2022 TSPR Bus/SeaBus Summaries[^6] and validated using Google Maps for accuracy. If there was a large discrepancy of a few kilometres or more, the Google Maps measurement was preferred. Then, average scheduled speeds were calculated using the simple equation relating speed, distance, and time. Finally, the number of bus stops on a particular route was manually tallied from the bus schedules. Please refer to the Appendix for access to the dataset.
+
+It should be noted that while bus schedules account for traffic, but it is certainly not guaranteed that a bus adheres to the schedule. Alternatively, buses may arrive on time, but be at full capacity, thus being incapable of taking on more passengers. While TransLink does release on-time performance metrics, these are not specific to the peak periods, when transit ridership and general traffic is usually at their highest.
+
+[^2]: https://www.translink.ca/schedules-and-maps/rapidbus
+
+[^3]: https://www.translink.ca/-/media/translink/documents/plans-and-projects/rapid-transit/bus-rapid-transit/brt-attributes-for-metro-vancouver.pdf
+
+[^4]: https://www.translink.ca/plans-and-projects/strategies-plans-and-guidelines/managing-the-transit-network#2022-transit-service-performance-review
+
+[^5]: https://www.translink.ca/schedules-and-maps/bus-schedule
+
+[^6]: https://public.tableau.com/app/profile/translink/viz/2022TSPR-BusSeaBusSummaries/TheWorkbook
+
+## Results and Discussion
+
+### Standalone Speeds
+
+First, let's take a look at the dataset of buses in Metro Vancouver sorted by average scheduled speed during the AM and PM peaks.
+
+```{r}
+#| label: setup
+#| include: false
+
+knitr::opts_chunk$set(echo = TRUE, fig.width = 8, fig.asp = 0.7)
+library(tidyverse)
+library(readxl)
+library(ggthemes)
+```
+
+```{r}
+#| label: import-and-filer-data 
+#| echo: false
+
+# Read in data
+allBuses <- read_excel("data/bus_perfomance_comparison.xlsx")
+allCities <- read_excel("data/standard_bus_comparison.xlsx")
+
+# Filter datasets based on time
+am_peak <- filter(allBuses, time == "AM Peak")
+pm_peak <- filter(allBuses, time == "PM Peak")
+
+# Reorganize datasets so that colours align
+am_peak$bus_type <- factor(am_peak$bus_type, levels = c("RapidBus", "B-Line", "Standard"))
+pm_peak$bus_type <- factor(pm_peak$bus_type, levels = c("RapidBus", "B-Line", "Standard"))
+bus_colors <- c("#008327","#F47922", "#5585A8")
+
+allCities$city <- factor(allCities$city, levels = c("Vancouver", "Montréal", "Toronto", "Bologna", "Milan", "Zürich", "Vienna"))
+
+# Calculate average stop spacing
+avg_dist_brt_lite <- round(mean(am_peak$average_stop_distance[am_peak$bus_type == "RapidBus" | am_peak$bus_type == "B-Line"]))
+avg_dist_standard <- round(mean(am_peak$average_stop_distance[am_peak$bus_type == "Standard"]))
+
+# Calculate AM peak values
+
+am_peak_avg_spd_brt_lite <- round(mean(am_peak$average_scheduled_speed[am_peak$bus_type == "RapidBus" | am_peak$bus_type == "B-Line"]),1)
+am_peak_avg_spd_standard <- round(mean(am_peak$average_scheduled_speed[am_peak$bus_type == "Standard"]),1)
+
+am_peak_sd_brt_lite <- round(sd(am_peak$average_scheduled_speed[am_peak$bus_type == "RapidBus" | am_peak$bus_type == "B-Line"]),2)
+am_peak_sd_standard <- round(sd(am_peak$average_scheduled_speed[am_peak$bus_type == "Standard"]),2)
+
+# Calculate PM peak values
+
+pm_peak_avg_spd_brt_lite <- round(mean(pm_peak$average_scheduled_speed[pm_peak$bus_type == "RapidBus" | pm_peak$bus_type == "B-Line"]),1)
+pm_peak_avg_spd_standard <- round(mean(pm_peak$average_scheduled_speed[pm_peak$bus_type == "Standard"]),1)
+
+pm_peak_sd_brt_lite <- round(sd(pm_peak$average_scheduled_speed[pm_peak$bus_type == "RapidBus" | pm_peak$bus_type == "B-Line"]),2)
+pm_peak_sd_standard <- round(sd(pm_peak$average_scheduled_speed[pm_peak$bus_type == "Standard"]),2)
+```
+
+::: panel-tabset
+# AM Peak
+
+```{r}
+#| label: am-peak-speeds
+#| echo: false
+
+ggplot(am_peak, aes(x = average_scheduled_speed, y = fct_reorder(route, average_scheduled_speed), fill = bus_type, width = 0.9)) +
+  geom_col() +
+  
+  coord_cartesian(xlim = c(6,38), expand = FALSE, clip = "on") + 
+  scale_x_continuous(breaks=seq(6, 38, by = 4)) +
+  
+  # Display dashed lines to show mean values...
+  
+  # for BRT-lite
+  annotate("segment", x = am_peak_avg_spd_brt_lite, xend = am_peak_avg_spd_brt_lite, y = 0.5, yend = 36.5, colour = "black", linetype = "dotted") +
+  # for standard buses
+  annotate("segment", x = am_peak_avg_spd_standard, xend = am_peak_avg_spd_standard, y = 0.5, yend = 36.5, colour = "black", linetype = "dotted") +
+  
+  # Print mean values...
+  
+  # for BRT-lite
+  annotate("text", x = 23.7, y = 16, label = paste("Average speed \n(BRT-lite) \n", am_peak_avg_spd_brt_lite, "km/h"), colour = "#008327", fontface = 2, size = 3.25, hjust = 0) +
+  # for standard buses
+  annotate("text", x = 17, y = 8, label = paste("Average speed \n(Standard) \n", format(round(am_peak_avg_spd_standard, 2), nsmall = 1), "km/h"), colour = "#5585A8", fontface = 2, size = 3.25, hjust = 0) +
+  
+  # Create spacing between plot and axis titles
+  theme(axis.title.y = element_text(margin = margin(t = 0, r = 20, b = 0, l = 0)),
+        axis.title.x = element_text(margin = margin(t = 20, r = 0, b = 0, l = 0)),
+        axis.text=element_text(size = 8)) +
+        # axis.text.y = element_text(hjust = 0)) +
+  
+  labs(
+    title = "Scheduled speed for the 36 busiest buses in Metro Vancouver (AM peak)",
+    x = "Average scheduled speed (km/h)", y = "Bus Route",
+    caption = "\n Ahasan Bhuiyan, Data: TSPR 2022, TransLink Bus Schedules, Google Maps",
+    fill = "Bus Type"
+  ) +
+  scale_fill_manual(values = bus_colors)
+```
+
+# PM Peak
+
+```{r}
+#| label: pm-peak-speeds
+#| echo: false
+
+ggplot(pm_peak, aes(x = average_scheduled_speed, y = fct_reorder(route, average_scheduled_speed), fill = bus_type, width = 0.9)) +
+  geom_col() +
+  
+  coord_cartesian(xlim = c(6,38), expand = FALSE, clip = "on") + 
+  scale_x_continuous(breaks=seq(6, 38, by = 4)) +
+  
+  # Display dashed lines to show mean values...
+  
+  # for BRT-lite
+  annotate("segment", x = pm_peak_avg_spd_brt_lite, xend = pm_peak_avg_spd_brt_lite, y = 0.5, yend = 36.5, colour = "black", linetype = "dotted") +
+  # for standard buses
+  annotate("segment", x = pm_peak_avg_spd_standard, xend = pm_peak_avg_spd_standard, y = 0.5, yend = 36.5, colour = "black", linetype = "dotted") +
+  
+  # Print mean values...
+  
+  # for BRT-lite
+  annotate("text", x = 21.35, y = 16, label = paste("Average speed \n(BRT-lite) \n", format(pm_peak_avg_spd_brt_lite, nsmall=1), "km/h"), colour = "#008327", fontface = 2, size = 3.25, hjust = 0) +
+  # for standard buses
+  annotate("text", x = 15.25, y = 8, label = paste("Average speed \n(Standard) \n",format(pm_peak_avg_spd_standard, nsmall=1), "km/h"), colour = "#5585A8", fontface = 2, size = 3.25, hjust = 0) +
+  
+  # Create spacing between plot and axis titles
+  theme(axis.title.y = element_text(margin = margin(t = 0, r = 20, b = 0, l = 0)),
+        axis.title.x = element_text(margin = margin(t = 20, r = 0, b = 0, l = 0)),
+        axis.text=element_text(size = 8)) +
+        # axis.text.y = element_text(hjust = 0)) +
+  
+  labs(
+    title = "Scheduled speed for the 36 busiest buses in Metro Vancouver (PM peak)",
+    x = "Average scheduled speed (km/h)", y = "Bus Route",
+    caption = "\n Ahasan Bhuiyan, Data: TSPR 2022, TransLink Bus Schedules, Google Maps",
+    fill = "Bus Type"
+  ) +
+  scale_fill_manual(values = bus_colors)
+```
+
+:::
+
+Perhaps unsurprisingly, the BRT-lite routes are among the fastest in the AM peak, with an average scheduled speed that is 45% faster than the typical standard bus. That being said, the standard deviation for the BRT-lite routes is also greater, being 6.65 km/h compared to  4.24 km/h for standard buses. The wider spread in speeds for the BRT-lite buses is illustrated by the R2 and R3 routes. The R2 is considerably slower than other RapidBuses, being the only one to have a sub-20-km/h average scheduled speed. Conversely, the R3 is the fastest RapidBus by a generous margin, being almost 2 standard deviations above the mean BRT-lite speed and more than twice as fast as the R2.
+
+Additionally, there are 5 standard bus routes that are able to achieve similar speeds to the BRT-lite routes, i.e., punching above an average speed of 20 km/h. The cause for this will be explored in the next section.
+
+During the PM peak, performances are relatively similar, albeit bus speeds across the board are decreased. Both BRT-lite and standard bus routes are roughly 10% slower during this period. Interestingly, however, the standard deviations for both bus categories are smaller as well, being 5.25 km/h for BRT-lite routes and 4.23 km/h for standard bus routes. This suggests that performances are more consistent during the PM peak, though uniform slowness is hardly a result worth celebrating.
+
+Buses like the 5/6, 20, 17, and 14 suffer particularly badly during the afternoon rush, as their average scheduled speeds drop to below 10 km/h. In regards to BRT-lite routes, while the R1 drops below 20 km/h, it still outperforms the R2, which is again slower than the average standard bus.
+
+### Regional Stop Spacing Comparison
+
+Bus speeds vary due to a multiplicity of factors, but key among them is the distance between stops, referred to as *stop spacing*. For any transit vehicle there is a delay associated with each stop. Time is required to:
+
+- Let the bus slow down to a stop and then accelerate again afterwards
+- Let passengers board and alight
+- Let the bus driver pull over to the curve, possibly lower the vehicle, and then merge back into traffic
+
+While these time delays may seem insignificant at a single bus stop, they accumulate over the total length of a route.[^7] Closely packed bus stops on a route result in a bus having to remain stationary for a greater proportion of time, thereby becoming slower on average. This phenomenon is present in the Metro Vancouver dataset as well.
+
+[^7]: https://www.youtube.com/watch?v=AgKw0bvvgZ4
+
+::: panel-tabset
+# AM Peak
+
+```{r .preview-image}
+#| label: am-peak-stop-spacing
+#| echo: false
+
+ggplot(
+  data = am_peak, 
+  mapping = aes(x = average_stop_distance, y = average_scheduled_speed)
+) +
+  geom_point(size = 1.5, mapping = aes(colour = bus_type)) +
+  
+  # Create labels for BRT-lite routes...
+  geom_text(aes(label = ifelse(bus_type == "RapidBus" | bus_type == "B-Line", as.character(route),'')), check_overlap = TRUE, hjust = 0.5, nudge_y = -1, size = 3) +
+  
+  # and standard buses faster than 20 km/h...
+  geom_text(aes(label = ifelse(bus_type == "Standard" & average_scheduled_speed > 20 & route != 430 & route != 503, as.character(route),'')), hjust = 0.5, nudge_y = -1, size = 3) +
+  
+  # and generate labels separately for the 430 and 503 since they overlap
+  geom_text(aes(label = ifelse(route == 430, as.character(route),'')), hjust = 0.5, nudge_y = 1, nudge_x = 20, size = 3) +
+  geom_text(aes(label = ifelse(route == 503, as.character(route),'')), hjust = 0.5, nudge_y = 1, nudge_x = -20, size = 3) +
+  
+  # Zoom in to area defined by x = [0, 2500] and y = [6, 38]
+  coord_cartesian(xlim = c(0,2500), ylim = c(6,38), expand = FALSE, clip = "off") + 
+  # Change x and y scales
+  scale_x_continuous(breaks=seq(0, 2500, by = 500)) +
+  scale_y_continuous(breaks=seq(6, 38, by = 4)) +
+
+  # Display dashed lines to show mean values...
+  # for BRT-lite
+  annotate("segment", x = avg_dist_brt_lite, xend = avg_dist_brt_lite, y = 6, yend = am_peak_avg_spd_brt_lite, colour = "#008327", linetype = 5) +
+  annotate("segment", x = 0, xend = avg_dist_brt_lite, y = am_peak_avg_spd_brt_lite, yend = am_peak_avg_spd_brt_lite, colour = "#008327", linetype = 5) +
+  
+  # for standard buses
+  annotate("segment", x = avg_dist_standard, xend = avg_dist_standard, y = 6, yend = am_peak_avg_spd_standard, colour = "#5585A8", linetype = 5) +
+  annotate("segment", x = 0, xend = avg_dist_standard, y = am_peak_avg_spd_standard, yend = am_peak_avg_spd_standard, colour = "#5585A8", linetype = 5) +
+
+  # Print mean values...
+  # for BRT-lite
+  annotate("text", x = 1336, y = 5.25, label = avg_dist_brt_lite, colour = "#008327", fontface = 2) +
+  annotate("text", x = -80, y = 23.2, label = am_peak_avg_spd_brt_lite, colour = "#008327", fontface = 2) +
+  
+  # for standard buses
+  annotate("text", x = 364, y = 5.25, label = avg_dist_standard, colour = "#5585A8", fontface = 2) +
+  annotate("text", x = -80, y = 16.5, label = format(am_peak_avg_spd_standard, nsmall=1), colour = "#5585A8", fontface = 2) +
+  
+  # Print legend note
+  annotate("text", x = 2600, y = 13, label = paste("Dashed lines \nrepresent \naverages for \nstandard and \nBRT-lite \nroutes"), fontface = "italic", size = 3.5, hjust = 0) +
+  
+  # Create spacing between plot and axis titles
+  theme(axis.title.y = element_text(margin = margin(t = 0, r = 20, b = 0, l = 0)),
+        axis.title.x = element_text(margin = margin(t = 20, r = 0, b = 0, l = 0))) +
+        # Left-justify caption
+        # plot.caption = element_text(hjust = 0)) +
+  
+  labs(
+    title = "Average scheduled speed vs. average stop distance (AM peak)",
+    x = "Average stop distance (m)", y = "Average scheduled speed (km/h)",
+    caption = "\n Ahasan Bhuiyan, Data: TSPR 2022, TransLink Bus Schedules, Google Maps",
+    color = "Bus Type"
+  ) +
+  scale_color_manual(values = bus_colors)
+
+```
+
+
+# PM Peak
+```{r}
+#| label: pm-peak-stop-spacing
+#| echo: false
+
+ggplot(
+  data = pm_peak, 
+  mapping = aes(x = average_stop_distance, y = average_scheduled_speed)
+) +
+  geom_point(size = 1.5, mapping = aes(colour = bus_type)) +
+  
+  # Create labels for BRT-lite routes...
+  geom_text(aes(label = ifelse(bus_type == "RapidBus" | bus_type == "B-Line", as.character(route),'')), check_overlap = TRUE, hjust = 0.5, nudge_y = -1, size = 3) +
+  
+  # and standard buses faster than 20 km/h...
+  geom_text(aes(label = ifelse(bus_type == "Standard" & average_scheduled_speed > 20, as.character(route),'')), hjust = 0.5, nudge_y = -1, size = 3) +
+  
+  # Zoom in to area defined by x = [0, 2500] and y = [6, 38]
+  coord_cartesian(xlim = c(0,2500), ylim = c(6,38), expand = FALSE, clip = "off") + 
+  # Change x and y scales
+  scale_x_continuous(breaks=seq(0, 2500, by = 500)) +
+  scale_y_continuous(breaks=seq(6, 38, by = 4)) +
+
+  # Display dashed lines to show mean values...
+  # for BRT-lite
+  annotate("segment", x = avg_dist_brt_lite, xend = avg_dist_brt_lite, y = 6, yend = pm_peak_avg_spd_brt_lite, colour = "#008327", linetype = 5) +
+  annotate("segment", x = 0, xend = avg_dist_brt_lite, y = pm_peak_avg_spd_brt_lite, yend = pm_peak_avg_spd_brt_lite, colour = "#008327", linetype = 5) +
+  
+  # for standard buses
+  annotate("segment", x = avg_dist_standard, xend = avg_dist_standard, y = 6, yend = pm_peak_avg_spd_standard, colour = "#5585A8", linetype = 5) +
+  annotate("segment", x = 0, xend = avg_dist_standard, y = pm_peak_avg_spd_standard, yend = pm_peak_avg_spd_standard, colour = "#5585A8", linetype = 5) +
+
+  # Print mean values...
+  # for BRT-lite
+  annotate("text", x = 1336, y = 5.25, label = avg_dist_brt_lite, colour = "#008327", fontface = 2) +
+  annotate("text", x = -80, y = 20.9, label = pm_peak_avg_spd_brt_lite, colour = "#008327", fontface = 2) +
+  
+  # for standard buses
+  annotate("text", x = 364, y = 5.25, label = avg_dist_standard, colour = "#5585A8", fontface = 2) +
+  annotate("text", x = -80, y = 15.1, label = pm_peak_avg_spd_standard, colour = "#5585A8", fontface = 2) +
+  
+  # Print legend note
+  annotate("text", x = 2600, y = 13, label = paste("Dashed lines \nrepresent \naverages for \nstandard and \nBRT-lite \nroutes"), fontface = "italic", size = 3.5, hjust = 0) +
+  
+  # Create spacing between plot and axis titles
+  theme(axis.title.y = element_text(margin = margin(t = 0, r = 20, b = 0, l = 0)),
+        axis.title.x = element_text(margin = margin(t = 20, r = 0, b = 0, l = 0))) +
+        # Left-justify caption
+        # plot.caption = element_text(hjust = 0)) +
+  
+  labs(
+    title = "Average scheduled speed vs. average stop distance (PM peak)",
+    x = "Average stop distance (m)", y = "Average scheduled speed (km/h)",
+    caption = "\n Ahasan Bhuiyan, Data: TSPR 2022, TransLink Bus Schedules, Google Maps",
+    color = "Bus Type"
+  ) +
+  scale_color_manual(values = bus_colors)
+```
+
+:::

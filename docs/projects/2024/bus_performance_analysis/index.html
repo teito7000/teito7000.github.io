@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.3.450">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="dcterms.date" content="2024-02-08">
+<meta name="description" content="Analysis of scheduled bus speeds with respect to stop spacing">
+
+<title>teito7000 - Metro Vancouver Bus Performance Analysis</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+</style>
+
+
+<script src="../../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../../">
+<script src="../../../site_libs/quarto-html/quarto.js"></script>
+<script src="../../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../../site_libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../../site_libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 20,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+
+<link rel="stylesheet" href="../../../styles.css">
+</head>
+
+<body class="nav-fixed">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg navbar-dark ">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container">
+    <a class="navbar-brand" href="../../../index.html">
+    <span class="navbar-title">teito7000</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll me-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../../projects.html" rel="" target="">
+ <span class="menu-text">Projects</span></a>
+  </li>  
+</ul>
+            <div class="quarto-navbar-tools ms-auto">
+</div>
+          </div> <!-- /navcollapse -->
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-full page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#introduction" id="toc-introduction" class="nav-link active" data-scroll-target="#introduction">Introduction</a></li>
+  <li><a href="#background-and-methodology" id="toc-background-and-methodology" class="nav-link" data-scroll-target="#background-and-methodology">Background and Methodology</a>
+  <ul class="collapse">
+  <li><a href="#bus-types" id="toc-bus-types" class="nav-link" data-scroll-target="#bus-types">Bus Types</a></li>
+  <li><a href="#data-sources" id="toc-data-sources" class="nav-link" data-scroll-target="#data-sources">Data Sources</a></li>
+  </ul></li>
+  <li><a href="#results-and-discussion" id="toc-results-and-discussion" class="nav-link" data-scroll-target="#results-and-discussion">Results and Discussion</a>
+  <ul class="collapse">
+  <li><a href="#standalone-speeds" id="toc-standalone-speeds" class="nav-link" data-scroll-target="#standalone-speeds">Standalone Speeds</a></li>
+  <li><a href="#regional-stop-spacing-comparison" id="toc-regional-stop-spacing-comparison" class="nav-link" data-scroll-target="#regional-stop-spacing-comparison">Regional Stop Spacing Comparison</a></li>
+  </ul></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content column-page-left" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Metro Vancouver Bus Performance Analysis</h1>
+  <div class="quarto-categories">
+    <div class="quarto-category">data</div>
+    <div class="quarto-category">map</div>
+    <div class="quarto-category">transit</div>
+  </div>
+  </div>
+
+<div>
+  <div class="description">
+    Analysis of scheduled bus speeds with respect to stop spacing
+  </div>
+</div>
+
+
+<div class="quarto-title-meta">
+
+    
+    <div>
+    <div class="quarto-title-meta-heading">Published</div>
+    <div class="quarto-title-meta-contents">
+      <p class="date">February 8, 2024</p>
+    </div>
+  </div>
+  
+    
+  </div>
+  
+
+</header>
+
+<p>Work in progress!</p>
+<section id="introduction" class="level2">
+<h2 class="anchored" data-anchor-id="introduction">Introduction</h2>
+<p>One of the keys to enabling a competitive public transit system is speed, and consequently, travel time. Slower speeds may be a symptom of unpredictable service, eroding confidence and pushing people towards alternative modes which save travel time albeit with potentially higher costs.<a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a> Additionally, a transportation option that does not value people’s time deters potential riders away from ever considering it. To achieve ambitious transit modal share targets where the majority of people choose public transportation over personal vehicles, public transit needs to be appealing to those who have the option to drive. In other words, transit travel time needs to be comparable to, or less than, that of driving. This is particularly true for mixed-traffic transit, which has to share its route with other road users.</p>
+<p>Within Metro Vancouver, buses serve as the main form of mixed-traffic transit and are mostly divided into three types: standard buses, RapidBuses, and the 99 B-Line. The purpose of this investigation was to find and compare the scheduled speed of these three bus types. An overall trend of stop spacing was identified to explain why bus speeds vary between routes and potential outliers were investigated. To provide some context, comparisons were made to see how Metro Vancouver stacks up against domestic and international counterparts. Finally, a discussion was had about how standard buses can attain better performance through infrastructure and policy restructuring.</p>
+</section>
+<section id="background-and-methodology" class="level2">
+<h2 class="anchored" data-anchor-id="background-and-methodology">Background and Methodology</h2>
+<p>TransLink is the transportation authority that manages the bus network in Metro Vancouver, through their subsidiary, Coast Mountain Bus Company. The buses primarily fall into the three aforementioned categories of standard buses, RapidBuses, and the 99 B-Line. Other niche types such as highway express and community shuttle routes are grouped into the standard bus category for this analysis.</p>
+<section id="bus-types" class="level3">
+<h3 class="anchored" data-anchor-id="bus-types">Bus Types</h3>
+<p>Standard buses comprise the majority of bus routes in the region and they typically have little infrastructure besides sign poles and possibly a bench at each stop.</p>
+<p>RapidBuses are express buses with additional features such as all-day frequency (usually every 15 minutes or better), wider distances between stops, all-door boarding, and real-time displays at bus stops.<a href="#fn2" class="footnote-ref" id="fnref2" role="doc-noteref"><sup>2</sup></a> RapidBus routes also feature a mix of bus priority measures (e.g., bus lanes, queue jumps, HOV lanes) for approximately 1/3 of their route.<a href="#fn3" class="footnote-ref" id="fnref3" role="doc-noteref"><sup>3</sup></a></p>
+<p>Lastly, the 99 B-Line is another express bus route with frequent service and transit priority by means of bus lanes. It serves as both the progenitor for the current RapidBus routes as well as the last surviving example of the B-Line express buses.</p>
+<p>Both the RapidBus and the 99 B-Line are characterized as “BRT-lite” routes, having some transit priority measures associated with Bus Rapid Transit, but lacking others, including signal priority and continuous dedicated bus lanes.</p>
+</section>
+<section id="data-sources" class="level3">
+<h3 class="anchored" data-anchor-id="data-sources">Data Sources</h3>
+<p>The data that was examined for this analysis consisted of the 36 busiest bus routes in Metro Vancouver according to annual boardings in 2022, as found in the Transit Service Performance Review (TSPR) for that year.<a href="#fn4" class="footnote-ref" id="fnref4" role="doc-noteref"><sup>4</sup></a> This includes the 99 B-Line, all 5 RapidBus routes, and 30 standard bus routes to provide a decent sample size. For each route, one direction of travel was chosen for inspection, that being the direction TransLink labels as “1”. The scheduled running time, the time it takes to travel from one terminus to another, was collected for both the AM and PM peak periods (around 8 AM and 5 PM) using bus schedules issued in 2023 September.<a href="#fn5" class="footnote-ref" id="fnref5" role="doc-noteref"><sup>5</sup></a> Distances were obtained from the 2022 TSPR Bus/SeaBus Summaries<a href="#fn6" class="footnote-ref" id="fnref6" role="doc-noteref"><sup>6</sup></a> and validated using Google Maps for accuracy. If there was a large discrepancy of a few kilometres or more, the Google Maps measurement was preferred. Then, average scheduled speeds were calculated using the simple equation relating speed, distance, and time. Finally, the number of bus stops on a particular route was manually tallied from the bus schedules. Please refer to the Appendix for access to the dataset.</p>
+<p>It should be noted that while bus schedules account for traffic, but it is certainly not guaranteed that a bus adheres to the schedule. Alternatively, buses may arrive on time, but be at full capacity, thus being incapable of taking on more passengers. While TransLink does release on-time performance metrics, these are not specific to the peak periods, when transit ridership and general traffic is usually at their highest.</p>
+</section>
+</section>
+<section id="results-and-discussion" class="level2">
+<h2 class="anchored" data-anchor-id="results-and-discussion">Results and Discussion</h2>
+<section id="standalone-speeds" class="level3">
+<h3 class="anchored" data-anchor-id="standalone-speeds">Standalone Speeds</h3>
+<p>First, let’s take a look at the dataset of buses in Metro Vancouver sorted by average scheduled speed during the AM and PM peaks.</p>
+<div class="tabset-margin-container"></div><div class="panel-tabset">
+<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-1-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-1-1" role="tab" aria-controls="tabset-1-1" aria-selected="true">AM Peak</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-1-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-1-2" role="tab" aria-controls="tabset-1-2" aria-selected="false">PM Peak</a></li></ul>
+<div class="tab-content">
+<div id="tabset-1-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-1-1-tab">
+<div class="cell">
+<div class="cell-output-display">
+<p><img src="index_files/figure-html/am-peak-speeds-1.png" class="img-fluid" width="768"></p>
+</div>
+</div>
+</div>
+<div id="tabset-1-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-1-2-tab">
+<div class="cell">
+<div class="cell-output-display">
+<p><img src="index_files/figure-html/pm-peak-speeds-1.png" class="img-fluid" width="768"></p>
+</div>
+</div>
+</div>
+</div>
+</div>
+<p>Perhaps unsurprisingly, the BRT-lite routes are among the fastest in the AM peak, with an average scheduled speed that is 45% faster than the typical standard bus. That being said, the standard deviation for the BRT-lite routes is also greater, being 6.65 km/h compared to 4.24 km/h for standard buses. The wider spread in speeds for the BRT-lite buses is illustrated by the R2 and R3 routes. The R2 is considerably slower than other RapidBuses, being the only one to have a sub-20-km/h average scheduled speed. Conversely, the R3 is the fastest RapidBus by a generous margin, being almost 2 standard deviations above the mean BRT-lite speed and more than twice as fast as the R2.</p>
+<p>Additionally, there are 5 standard bus routes that are able to achieve similar speeds to the BRT-lite routes, i.e., punching above an average speed of 20 km/h. The cause for this will be explored in the next section.</p>
+<p>During the PM peak, performances are relatively similar, albeit bus speeds across the board are decreased. Both BRT-lite and standard bus routes are roughly 10% slower during this period. Interestingly, however, the standard deviations for both bus categories are smaller as well, being 5.25 km/h for BRT-lite routes and 4.23 km/h for standard bus routes. This suggests that performances are more consistent during the PM peak, though uniform slowness is hardly a result worth celebrating.</p>
+<p>Buses like the 5/6, 20, 17, and 14 suffer particularly badly during the afternoon rush, as their average scheduled speeds drop to below 10 km/h. In regards to BRT-lite routes, while the R1 drops below 20 km/h, it still outperforms the R2, which is again slower than the average standard bus.</p>
+</section>
+<section id="regional-stop-spacing-comparison" class="level3">
+<h3 class="anchored" data-anchor-id="regional-stop-spacing-comparison">Regional Stop Spacing Comparison</h3>
+<p>Bus speeds vary due to a multiplicity of factors, but key among them is the distance between stops, referred to as <em>stop spacing</em>. For any transit vehicle there is a delay associated with each stop. Time is required to:</p>
+<ul>
+<li>Let the bus slow down to a stop and then accelerate again afterwards</li>
+<li>Let passengers board and alight</li>
+<li>Let the bus driver pull over to the curve, possibly lower the vehicle, and then merge back into traffic</li>
+</ul>
+<p>While these time delays may seem insignificant at a single bus stop, they accumulate over the total length of a route.<a href="#fn7" class="footnote-ref" id="fnref7" role="doc-noteref"><sup>7</sup></a> Closely packed bus stops on a route result in a bus having to remain stationary for a greater proportion of time, thereby becoming slower on average. This phenomenon is present in the Metro Vancouver dataset as well.</p>
+<div class="tabset-margin-container"></div><div class="panel-tabset">
+<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-2-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-2-1" role="tab" aria-controls="tabset-2-1" aria-selected="true">AM Peak</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-2-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-2-2" role="tab" aria-controls="tabset-2-2" aria-selected="false">PM Peak</a></li></ul>
+<div class="tab-content">
+<div id="tabset-2-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-2-1-tab">
+<div class="cell">
+<div class="cell-output-display">
+<p><img src="index_files/figure-html/am-peak-stop-spacing-1.png" class="img-fluid" width="768"></p>
+</div>
+</div>
+</div>
+<div id="tabset-2-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-2-2-tab">
+<div class="cell">
+<div class="cell-output-display">
+<p><img src="index_files/figure-html/pm-peak-stop-spacing-1.png" class="img-fluid" width="768"></p>
+</div>
+</div>
+</div>
+</div>
+</div>
+
+
+</section>
+</section>
+
+
+<div id="quarto-appendix" class="default"><section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes"><h2 class="anchored quarto-appendix-heading">Footnotes</h2>
+
+<ol>
+<li id="fn1"><p>https://view.publitas.com/translink/bus-speed-and-reliability-report-2023<a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn2"><p>https://www.translink.ca/schedules-and-maps/rapidbus<a href="#fnref2" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn3"><p>https://www.translink.ca/-/media/translink/documents/plans-and-projects/rapid-transit/bus-rapid-transit/brt-attributes-for-metro-vancouver.pdf<a href="#fnref3" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn4"><p>https://www.translink.ca/plans-and-projects/strategies-plans-and-guidelines/managing-the-transit-network#2022-transit-service-performance-review<a href="#fnref4" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn5"><p>https://www.translink.ca/schedules-and-maps/bus-schedule<a href="#fnref5" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn6"><p>https://public.tableau.com/app/profile/translink/viz/2022TSPR-BusSeaBusSummaries/TheWorkbook<a href="#fnref6" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn7"><p>https://www.youtube.com/watch?v=AgKw0bvvgZ4<a href="#fnref7" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+</ol>
+</section></div></main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button', {
+    text: function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+  });
+  clipboard.on('success', function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  });
+  function tippyHover(el, contentFn) {
+    const config = {
+      allowHTML: true,
+      content: contentFn,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start'
+    };
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      return note.innerHTML;
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+</div> <!-- /content -->
+<footer class="footer">
+  <div class="nav-footer">
+    <div class="nav-footer-left">
+      &nbsp;
+    </div>   
+    <div class="nav-footer-center">© 2024 Ahasan Bhuiyan</div>
+    <div class="nav-footer-right">
+      &nbsp;
+    </div>
+  </div>
+</footer>
+
+
+
+</body></html>
