@@ -3,6 +3,12 @@ p {
   text-align: justify;
 }
 
+/*.date {
+  text-align: left;
+  margin-left: 0;
+  padding-left: 0;
+}*/
+
 .caption {
   color: grey;
   font-style: normal;

@@ -113,6 +113,7 @@ ul.task-list li input[type="checkbox"] {
   <ul class="collapse">
   <li><a href="#standalone-speeds" id="toc-standalone-speeds" class="nav-link" data-scroll-target="#standalone-speeds">Standalone Speeds</a></li>
   <li><a href="#regional-stop-spacing-comparison" id="toc-regional-stop-spacing-comparison" class="nav-link" data-scroll-target="#regional-stop-spacing-comparison">Regional Stop Spacing Comparison</a></li>
+  <li><a href="#multinational-stop-spacing-comparison" id="toc-multinational-stop-spacing-comparison" class="nav-link" data-scroll-target="#multinational-stop-spacing-comparison">Multinational Stop Spacing Comparison</a></li>
   </ul></li>
   </ul>
 </nav>
@@ -153,7 +154,6 @@ ul.task-list li input[type="checkbox"] {
 
 </header>
 
-<p>Work in progress!</p>
 <section id="introduction" class="level2">
 <h2 class="anchored" data-anchor-id="introduction">Introduction</h2>
 <p>One of the keys to enabling a competitive public transit system is speed, and consequently, travel time. Slower speeds may be a symptom of unpredictable service, eroding confidence and pushing people towards alternative modes which save travel time albeit with potentially higher costs.<a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a> Additionally, a transportation option that does not value people’s time deters potential riders away from ever considering it. To achieve ambitious transit modal share targets where the majority of people choose public transportation over personal vehicles, public transit needs to be appealing to those who have the option to drive. In other words, transit travel time needs to be comparable to, or less than, that of driving. This is particularly true for mixed-traffic transit, which has to share its route with other road users.</p>
@@ -206,7 +206,7 @@ ul.task-list li input[type="checkbox"] {
 </section>
 <section id="regional-stop-spacing-comparison" class="level3">
 <h3 class="anchored" data-anchor-id="regional-stop-spacing-comparison">Regional Stop Spacing Comparison</h3>
-<p>Bus speeds vary due to a multiplicity of factors, but key among them is the distance between stops, referred to as <em>stop spacing</em>. For any transit vehicle there is a delay associated with each stop. Time is required to:</p>
+<p>Bus speeds vary due to a multiplicity of factors, but key among them is the distance between stops, referred to as stop spacing. For any transit vehicle there is a delay associated with each stop. Time is required to:</p>
 <ul>
 <li>Let the bus slow down to a stop and then accelerate again afterwards</li>
 <li>Let passengers board and alight</li>
@@ -217,7 +217,7 @@ ul.task-list li input[type="checkbox"] {
 <ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-2-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-2-1" role="tab" aria-controls="tabset-2-1" aria-selected="true">AM Peak</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-2-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-2-2" role="tab" aria-controls="tabset-2-2" aria-selected="false">PM Peak</a></li></ul>
 <div class="tab-content">
 <div id="tabset-2-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-2-1-tab">
-<div class="cell">
+<div class="cell preview-image">
 <div class="cell-output-display">
 <p><img src="index_files/figure-html/am-peak-stop-spacing-1.png" class="img-fluid" width="768"></p>
 </div>
@@ -232,6 +232,40 @@ ul.task-list li input[type="checkbox"] {
 </div>
 </div>
 </div>
+<p>Standard buses have an average distance of 365 m between stops, compared to 1336 m for the BRT-lite buses. While increasing the distance between stops does correspond with faster speeds, BRT-lite levels of stop spacing is not the minimum required to see significant improvements. Case in point, there are 5 standard bus routes that enjoy average speeds in excess of 20 km/h during the AM peak. This feat is possible partially due to their above average stop spacing. The route with the most closely packed stops among them, the 321, still has bus stops spaced out 438 m on average, greater than the 356 m seen on the average standard bus route.</p>
+<p>With logarithmic regression, a trend line can be found relating average stop distance with average scheduled speed. The logarithm function was chosen because of its derivative characteristics. A logarithm’s slope starts out very large and then decreases in the direction of increasing input. The same pattern appears in the model, with monumental performance increases obtained for standard buses with only relatively minor increases to stop spacing. Increasing the distance between stops from 200 m to 300 m is likely to bring a greater relative speed boost than going from 300 m to 400 m. Similarly, while the R2 is the fastest BRT-lite route, its 2457 m stop spacing is a result of its location along a highway. Such extremely wide stop spacing is neither applicable to most conventional urban routes, nor is it a necessary threshold for better bus performance.</p>
+<div class="tabset-margin-container"></div><div class="panel-tabset">
+<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-3-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-3-1" role="tab" aria-controls="tabset-3-1" aria-selected="true">AM Peak</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-3-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-3-2" role="tab" aria-controls="tabset-3-2" aria-selected="false">PM Peak</a></li></ul>
+<div class="tab-content">
+<div id="tabset-3-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-3-1-tab">
+<div class="cell">
+<div class="cell-output-display">
+<p><img src="index_files/figure-html/am-peak-regression-1.png" class="img-fluid" width="768"></p>
+</div>
+</div>
+</div>
+<div id="tabset-3-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-3-2-tab">
+<div class="cell">
+<div class="cell-output-display">
+<p><img src="index_files/figure-html/pm-peak-regression-1.png" class="img-fluid" width="768"></p>
+</div>
+</div>
+</div>
+</div>
+</div>
+<p>The benefits of stop spacing increases is not lost on TransLink, as their Bus Stop Balancing program has been active in the last few years, consolidating and relocating bus stops on a number of routes mentioned. Based on their Transit Service Guidelines, TransLink aims to have a stop spacing regimen of 300 to 800 m for routes classified as all-day frequent.<a href="#fn8" class="footnote-ref" id="fnref8" role="doc-noteref"><sup>8</sup></a></p>
+<p>Astute readers will note that while most bus routes appear to fit the logarithmic model decently well, one notable exception is once again the R2 RapidBus, whose speed is far below what is theoretically possible with its wide stop spacing. This returns to the multifaceted nature of bus performance and how stop spacing alone cannot fully predict speeds. Buses benefit from transit priority measures like bus lanes. Although the mere existence of bus lanes does not necessarily mean better performance<a href="#fn9" class="footnote-ref" id="fnref9" role="doc-noteref"><sup>9</sup></a>, effective implementation can speed up public transit. The R2 was recently the beneficiary of a project designed to better integrate transit priority on the North Shore by adding bus lanes to a missing segment of the R2’s route<a href="#fn10" class="footnote-ref" id="fnref10" role="doc-noteref"><sup>10</sup></a>, which will hopefully reduce delays and close the gap between current performance and that forecasted by the model.</p>
+</section>
+<section id="multinational-stop-spacing-comparison" class="level3">
+<h3 class="anchored" data-anchor-id="multinational-stop-spacing-comparison">Multinational Stop Spacing Comparison</h3>
+<p>To see how Metro Vancouver compares with other metropolitan areas in regards to stop spacing and transit speeds, data from Chitti’s original post<a href="#fn11" class="footnote-ref" id="fnref11" role="doc-noteref"><sup>11</sup></a> is borrowed and added to. The set of cities includes the Canadian metropolises of Montréal and Toronto along with international counterparts from Europe. Focus is placed on standard bus performance during the AM peak. so the RapidBus and B-Line routes are excluded.</p>
+<div class="cell">
+<div class="cell-output-display">
+<p><img src="index_files/figure-html/all-cities-comparison-1.png" class="img-fluid" width="768"></p>
+</div>
+</div>
+<p>It becomes apparent that Montréal and Toronto have the smallest average stop spacing and consequently some of the slowest standard buses. Meanwhile, Milan has larger stop spacing values, but suffers from the lack of other transit priority elements, ending up with a slower speed.<a href="#fn12" class="footnote-ref" id="fnref12" role="doc-noteref"><sup>12</sup></a> Metro Vancouver’s stop spacing is more in line with that found in the European cities.</p>
+<p>While Metro Vancouver wins out on average speed for its standard buses in this comparison, the exact speed rankings should be taken with a grain of salt given the limited sample size of bus routes. Moreover, as hinted with Milan, there’s more to bus network performance than just stop spacing, and Metro Vancouver should look at other factors as well as it continues to upgrade its transit system.</p>
 
 
 </section>
@@ -248,6 +282,11 @@ ul.task-list li input[type="checkbox"] {
 <li id="fn5"><p>https://www.translink.ca/schedules-and-maps/bus-schedule<a href="#fnref5" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
 <li id="fn6"><p>https://public.tableau.com/app/profile/translink/viz/2022TSPR-BusSeaBusSummaries/TheWorkbook<a href="#fnref6" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
 <li id="fn7"><p>https://www.youtube.com/watch?v=AgKw0bvvgZ4<a href="#fnref7" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn8"><p>https://www.translink.ca/plans-and-projects/projects/bus-projects/bus-stop-balancing<a href="#fnref8" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn9"><p>https://marcochitti.substack.com/p/getting-bus-priority-right-lessons<a href="#fnref9" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn10"><p>https://www.cnv.org/streets-transportation/transportation-projects/past-projects/marine-main-r2-rapidbus-upgrades<a href="#fnref10" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn11"><p>See footnote 9<a href="#fnref11" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn12"><p>See footnote 9<a href="#fnref12" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
 </ol>
 </section></div></main> <!-- /main -->
 <script id="quarto-html-after-body" type="application/javascript">

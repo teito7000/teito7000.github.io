@@ -12,8 +12,6 @@ format:
     css: ../../../styles.css
 ---
 
-Work in progress!
-
 ## Introduction
 
 One of the keys to enabling a competitive public transit system is speed, and consequently, travel time. Slower speeds may be a symptom of unpredictable service, eroding confidence and pushing people towards alternative modes which save travel time albeit with potentially higher costs.[^1] Additionally, a transportation option that does not value people's time deters potential riders away from ever considering it. To achieve ambitious transit modal share targets where the majority of people choose public transportation over personal vehicles, public transit needs to be appealing to those who have the option to drive. In other words, transit travel time needs to be comparable to, or less than, that of driving. This is particularly true for mixed-traffic transit, which has to share its route with other road users.
@@ -203,7 +201,7 @@ Buses like the 5/6, 20, 17, and 14 suffer particularly badly during the afternoo
 
 ### Regional Stop Spacing Comparison
 
-Bus speeds vary due to a multiplicity of factors, but key among them is the distance between stops, referred to as *stop spacing*. For any transit vehicle there is a delay associated with each stop. Time is required to:
+Bus speeds vary due to a multiplicity of factors, but key among them is the distance between stops, referred to as stop spacing. For any transit vehicle there is a delay associated with each stop. Time is required to:
 
 - Let the bus slow down to a stop and then accelerate again afterwards
 - Let passengers board and alight
@@ -214,10 +212,12 @@ While these time delays may seem insignificant at a single bus stop, they accumu
 [^7]: https://www.youtube.com/watch?v=AgKw0bvvgZ4
 
 ::: panel-tabset
+
 # AM Peak
 
-```{r .preview-image}
+```{r}
 #| label: am-peak-stop-spacing
+#| classes: preview-image
 #| echo: false
 
 ggplot(
@@ -279,8 +279,8 @@ ggplot(
 
 ```
 
-
 # PM Peak
+
 ```{r}
 #| label: pm-peak-stop-spacing
 #| echo: false
@@ -340,3 +340,286 @@ ggplot(
 ```
 
 :::
+
+Standard buses have an average distance of 365 m between stops, compared to 1336 m for the BRT-lite buses. While increasing the distance between stops does correspond with faster speeds, BRT-lite levels of stop spacing is not the minimum required to see significant improvements. Case in point, there are 5 standard bus routes that enjoy average speeds in excess of 20 km/h during the AM peak. This feat is possible partially due to their above average stop spacing. The route with the most closely packed stops among them, the 321, still has bus stops spaced out 438 m on average, greater than the 356 m seen on the average standard bus route.
+
+With logarithmic regression, a trend line can be found relating average stop distance with average scheduled speed. The logarithm function was chosen because of its derivative characteristics. A logarithm's slope starts out very large and then decreases in the direction of increasing input. The same pattern appears in the model, with monumental performance increases obtained for standard buses with only relatively minor increases to stop spacing. Increasing the distance between stops from 200 m to 300 m is likely to bring a greater relative speed boost than going from 300 m to 400 m. Similarly, while the R2 is the fastest BRT-lite route, its 2457 m stop spacing is a result of its location along a highway. Such extremely wide stop spacing is neither applicable to most conventional urban routes, nor is it a necessary threshold for better bus performance.
+
+::: panel-tabset
+
+# AM Peak
+
+```{r}
+#| label: am-peak-regression
+#| echo: false
+
+# Log model
+am_model <- lm(average_scheduled_speed ~ log(average_stop_distance), data = am_peak)
+# summary(am_model)
+
+ggplot(
+  data = am_peak, 
+  mapping = aes(x = average_stop_distance, y = average_scheduled_speed)
+) +
+  geom_point(size = 1.5, mapping = aes(colour = bus_type)) +
+  
+  # Create log regression line
+  geom_smooth(method = "lm", formula = y ~ log(x), colour = "black", se = FALSE) +
+  # Print R^2 value
+  annotate("text", x = 1500, y = 31, label = "italic(R) ^ 2 == 0.7578", parse = TRUE, fontface = 2) +
+  
+  # Zoom in to area defined by x = [0, 2500] and y = [8, 40]
+  coord_cartesian(xlim = c(0,2500), ylim = c(6,38), expand = FALSE, clip = "off") + 
+  # Change x and y scales
+  scale_x_continuous(breaks=seq(0, 2500, by = 500)) +
+  scale_y_continuous(breaks=seq(6, 38, by = 4)) +
+
+  # Display dashed lines to show mean values...
+  # for BRT-lite
+  annotate("segment", x = avg_dist_brt_lite, xend = avg_dist_brt_lite, y = 6, yend = am_peak_avg_spd_brt_lite, colour = "#008327", linetype = 5) +
+  annotate("segment", x = 0, xend = avg_dist_brt_lite, y = am_peak_avg_spd_brt_lite, yend = am_peak_avg_spd_brt_lite, colour = "#008327", linetype = 5) +
+  
+  # for standard buses
+  annotate("segment", x = avg_dist_standard, xend = avg_dist_standard, y = 6, yend = am_peak_avg_spd_standard, colour = "#5585A8", linetype = 5) +
+  annotate("segment", x = 0, xend = avg_dist_standard, y = am_peak_avg_spd_standard, yend = am_peak_avg_spd_standard, colour = "#5585A8", linetype = 5) +
+
+  # Print mean values...
+  # for BRT-lite
+  annotate("text", x = 1336, y = 5.25, label = avg_dist_brt_lite, colour = "#008327", fontface = 2) +
+  annotate("text", x = -80, y = 23.2, label = am_peak_avg_spd_brt_lite, colour = "#008327", fontface = 2) +
+  
+  # for standard buses
+  annotate("text", x = 364, y = 5.25, label = avg_dist_standard, colour = "#5585A8", fontface = 2) +
+  annotate("text", x = -80, y = 16.5, label = format(am_peak_avg_spd_standard, nsmall=1), colour = "#5585A8", fontface = 2) +
+  
+  # Print legend note
+  annotate("text", x = 2600, y = 13, label = paste("Dashed lines \nrepresent \naverages for \nstandard and \nBRT-lite \nroutes"), fontface = "italic", size = 3.5, hjust = 0) +
+  
+  # Create spacing between plot and axis titles
+  theme(axis.title.y = element_text(margin = margin(t = 0, r = 20, b = 0, l = 0)),
+        axis.title.x = element_text(margin = margin(t = 20, r = 0, b = 0, l = 0))) +
+        # Left-justify caption
+        # plot.caption = element_text(hjust = 0)) +
+  
+  labs(
+    title = "Average scheduled speed vs. average stop distance (AM peak)",
+    x = "Average stop distance (m)", y = "Average scheduled speed (km/h)",
+    caption = "\n Ahasan Bhuiyan, Data: TSPR 2022, TransLink Bus Schedules, Google Maps",
+    color = "Bus Type"
+  ) +
+  scale_color_manual(values = bus_colors)
+```
+
+# PM Peak
+
+```{r}
+#| label: pm-peak-regression
+#| echo: false
+
+# Log model
+pm_model <- lm(average_scheduled_speed ~ log(average_stop_distance), data = pm_peak)
+# summary(pm_model)
+
+ggplot(
+  data = pm_peak, 
+  mapping = aes(x = average_stop_distance, y = average_scheduled_speed)
+) +
+  geom_point(size = 1.5, mapping = aes(colour = bus_type)) +
+  
+  # Create log regression line
+  geom_smooth(method = "lm", formula = y ~ log(x), colour = "black", se = FALSE) +
+  # Print R^2 value
+  annotate("text", x = 1500, y = 31, label = "italic(R) ^ 2 == 0.6916", parse = TRUE, fontface = 2) +
+  
+  # Zoom in to area defined by x = [0, 2500] and y = [8, 40]
+  coord_cartesian(xlim = c(0,2500), ylim = c(6,38), expand = FALSE, clip = "off") + 
+  # Change x and y scales
+  scale_x_continuous(breaks=seq(0, 2500, by = 500)) +
+  scale_y_continuous(breaks=seq(6, 38, by = 4)) +
+
+  # Display dashed lines to show mean values...
+  # for BRT-lite
+  annotate("segment", x = avg_dist_brt_lite, xend = avg_dist_brt_lite, y = 6, yend = pm_peak_avg_spd_brt_lite, colour = "#008327", linetype = 5) +
+  annotate("segment", x = 0, xend = avg_dist_brt_lite, y = pm_peak_avg_spd_brt_lite, yend = pm_peak_avg_spd_brt_lite, colour = "#008327", linetype = 5) +
+  
+  # for standard buses
+  annotate("segment", x = avg_dist_standard, xend = avg_dist_standard, y = 6, yend = pm_peak_avg_spd_standard, colour = "#5585A8", linetype = 5) +
+  annotate("segment", x = 0, xend = avg_dist_standard, y = pm_peak_avg_spd_standard, yend = pm_peak_avg_spd_standard, colour = "#5585A8", linetype = 5) +
+
+  # Print mean values...
+  # for BRT-lite
+  annotate("text", x = 1336, y = 5.25, label = avg_dist_brt_lite, colour = "#008327", fontface = 2) +
+  annotate("text", x = -80, y = 20.9, label = pm_peak_avg_spd_brt_lite, colour = "#008327", fontface = 2) +
+  
+  # for standard buses
+  annotate("text", x = 364, y = 5.25, label = avg_dist_standard, colour = "#5585A8", fontface = 2) +
+  annotate("text", x = -80, y = 15.1, label = pm_peak_avg_spd_standard, colour = "#5585A8", fontface = 2) +
+  
+  # Print legend note
+  annotate("text", x = 2600, y = 13, label = paste("Dashed lines \nrepresent \naverages for \nstandard and \nBRT-lite \nroutes"), fontface = "italic", size = 3.5, hjust = 0) +
+  
+  # Create spacing between plot and axis titles
+  theme(axis.title.y = element_text(margin = margin(t = 0, r = 20, b = 0, l = 0)),
+        axis.title.x = element_text(margin = margin(t = 20, r = 0, b = 0, l = 0))) +
+        # Left-justify caption
+        # plot.caption = element_text(hjust = 0)) +
+  
+  labs(
+    title = "Average scheduled speed vs. average stop distance (PM peak)",
+    x = "Average stop distance (m)", y = "Average scheduled speed (km/h)",
+    caption = "\n Ahasan Bhuiyan, Data: TSPR 2022, TransLink Bus Schedules, Google Maps",
+    color = "Bus Type"
+  ) +
+  scale_color_manual(values = bus_colors)
+```
+
+:::
+
+The benefits of stop spacing increases is not lost on TransLink, as their Bus Stop Balancing program has been active in the last few years, consolidating and relocating bus stops on a number of routes mentioned. Based on their Transit Service Guidelines, TransLink aims to have a stop spacing regimen of 300 to 800 m for routes classified as all-day frequent.[^8]
+
+Astute readers will note that while most bus routes appear to fit the logarithmic model decently well, one notable exception is once again the R2 RapidBus, whose speed is far below what is theoretically possible with its wide stop spacing. This returns  to the multifaceted nature of bus performance and how stop spacing alone cannot fully predict speeds. Buses benefit from transit priority measures like bus lanes. Although the mere existence of bus lanes does not necessarily mean better performance[^9], effective implementation can speed up public transit. The R2 was recently the beneficiary of a project designed to better integrate transit priority on the North Shore by adding bus lanes to a missing segment of the R2's route[^10], which will hopefully reduce delays and close the gap between current performance and that forecasted by the model.
+
+[^8]: https://www.translink.ca/plans-and-projects/projects/bus-projects/bus-stop-balancing
+
+[^9]: https://marcochitti.substack.com/p/getting-bus-priority-right-lessons
+
+[^10]: https://www.cnv.org/streets-transportation/transportation-projects/past-projects/marine-main-r2-rapidbus-upgrades
+
+### Multinational Stop Spacing Comparison
+
+To see how Metro Vancouver compares with other metropolitan areas in regards to stop spacing and transit speeds, data from Chitti's original post[^ref1] is borrowed and added to. The set of cities includes the Canadian metropolises of Montréal and Toronto along with international counterparts from Europe. Focus is placed on standard bus performance during the AM peak. so the RapidBus and B-Line routes are excluded.
+
+[^ref1]: See footnote 9
+
+```{r}
+#| label: all-city-calcs
+#| echo: false
+
+avg_dist_vancouver <- round(mean(allCities$average_stop_distance[allCities$city == "Vancouver"]))
+avg_dist_montréal <- round(mean(allCities$average_stop_distance[allCities$city == "Montréal"]))
+avg_dist_toronto <- round(mean(allCities$average_stop_distance[allCities$city == "Toronto"]))
+avg_dist_bologna <- round(mean(allCities$average_stop_distance[allCities$city == "Bologna"]))
+avg_dist_milan <- round(mean(allCities$average_stop_distance[allCities$city == "Milan"]))
+avg_dist_zürich <- round(mean(allCities$average_stop_distance[allCities$city == "Zürich"]))
+avg_dist_vienna <- round(mean(allCities$average_stop_distance[allCities$city == "Vienna"]))
+
+am_peak_avg_spd_vancouver <- round(mean(allCities$average_scheduled_speed[allCities$city == "Vancouver"]),1)
+am_peak_avg_spd_montréal <- round(mean(allCities$average_scheduled_speed[allCities$city == "Montréal"]),1)
+am_peak_avg_spd_toronto <- round(mean(allCities$average_scheduled_speed[allCities$city == "Toronto"]),1)
+am_peak_avg_spd_bologna <- round(mean(allCities$average_scheduled_speed[allCities$city == "Bologna"]),1)
+am_peak_avg_spd_milan <- round(mean(allCities$average_scheduled_speed[allCities$city == "Milan"]),1)
+am_peak_avg_spd_zürich <- round(mean(allCities$average_scheduled_speed[allCities$city == "Zürich"]),1)
+am_peak_avg_spd_vienna <- round(mean(allCities$average_scheduled_speed[allCities$city == "Vienna"]),1)
+
+am_peak_sd_vancouver <- round(sd(allCities$average_scheduled_speed[allCities$city == "Vancouver"]),2)
+am_peak_sd_montréal <- round(sd(allCities$average_scheduled_speed[allCities$city == "Montréal"]),2)
+am_peak_sd_toronto <- round(sd(allCities$average_scheduled_speed[allCities$city == "Toronto"]),2)
+am_peak_sd_bologna <- round(sd(allCities$average_scheduled_speed[allCities$city == "Bologna"]),2)
+am_peak_sd_milan <- round(sd(allCities$average_scheduled_speed[allCities$city == "Milan"]),2)
+am_peak_sd_zürich <- round(sd(allCities$average_scheduled_speed[allCities$city == "Zürich"]),2)
+am_peak_sd_vienna <- round(sd(allCities$average_scheduled_speed[allCities$city == "Vienna"]),2)
+```
+
+```{r}
+#| label: all-cities-comparison
+#| echo: false
+
+# cbPalette <- c("#000000", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7")
+city_colors <- c("#F47922", "#055c9f", "#50aa26", "#c90d01", "#7c39d4", "#595959", "#d3af00")
+
+ggplot(
+  data = allCities,
+  mapping = aes(x = average_stop_distance, y = average_scheduled_speed)
+) +
+  geom_point(size = 1.5, mapping = aes(colour = city)) +
+  
+  # Zoom in to area defined by x = [150, 850] and y = [8, 26]
+  coord_cartesian(xlim = c(100, 900), ylim = c(8, 26), expand = FALSE, clip = "off") +
+  # Change x and y scales
+  scale_x_continuous(breaks=seq(100, 900, by = 100)) +
+  scale_y_continuous(breaks=seq(8, 26, by = 2)) +
+  
+  # Display dashed lines to show mean values...
+  # for Vancouver
+  annotate("segment", x = avg_dist_vancouver, xend = avg_dist_vancouver, y = 8, yend = am_peak_avg_spd_vancouver, colour = "#F47922", linetype = "dotted") +
+  annotate("segment", x = 100, xend = avg_dist_vancouver, y = am_peak_avg_spd_vancouver, yend = am_peak_avg_spd_vancouver, colour = "#F47922", linetype = "dotted") +
+  
+  # for Montréal
+  annotate("segment", x = avg_dist_montréal, xend = avg_dist_montréal, y = 8, yend = am_peak_avg_spd_montréal, colour = "#055c9f", linetype = "dotted") +
+  annotate("segment", x = 100, xend = avg_dist_montréal, y = am_peak_avg_spd_montréal, yend = am_peak_avg_spd_montréal, colour = "#055c9f", linetype = "dotted") +
+  
+  # for Toronto
+  annotate("segment", x = avg_dist_toronto, xend = avg_dist_toronto, y = 8, yend = am_peak_avg_spd_toronto, colour = "#50aa26", linetype = "dotted") +
+  annotate("segment", x = 100, xend = avg_dist_toronto, y = am_peak_avg_spd_toronto, yend = am_peak_avg_spd_toronto, colour = "#50aa26", linetype = "dotted") +
+  
+  # for Bologna
+  annotate("segment", x = avg_dist_bologna, xend = avg_dist_bologna, y = 8, yend = am_peak_avg_spd_bologna, colour = "#c90d01", linetype = "dotted") +
+  annotate("segment", x = 100, xend = avg_dist_bologna, y = am_peak_avg_spd_bologna, yend = am_peak_avg_spd_bologna, colour = "#c90d01", linetype = "dotted") +
+  
+  # for Milan
+  annotate("segment", x = avg_dist_milan, xend = avg_dist_milan, y = 8, yend = am_peak_avg_spd_milan, colour = "#7c39d4", linetype = "dotted") +
+  annotate("segment", x = 100, xend = avg_dist_milan, y = am_peak_avg_spd_milan, yend = am_peak_avg_spd_milan, colour = "#7c39d4", linetype = "dotted") +
+  
+  # for Zürich
+  annotate("segment", x = avg_dist_zürich, xend = avg_dist_zürich, y = 8, yend = am_peak_avg_spd_zürich, colour = "#595959", linetype = "dotted") +
+  annotate("segment", x = 100, xend = avg_dist_zürich, y = am_peak_avg_spd_zürich, yend = am_peak_avg_spd_zürich, colour = "#595959", linetype = "dotted") +
+  
+  # for Vienna
+  annotate("segment", x = avg_dist_vienna, xend = avg_dist_vienna, y = 8, yend = am_peak_avg_spd_vienna, colour = "#d3af00", linetype = "dotted") +
+  annotate("segment", x = 100, xend = avg_dist_vienna, y = am_peak_avg_spd_vienna, yend = am_peak_avg_spd_vienna, colour = "#d3af00", linetype = "dotted") +
+  
+  # Print mean values...
+  # for Vancouver
+  annotate("text", x = 360, y = 7.25, label = avg_dist_vancouver, colour = "#F47922", fontface = "bold", angle = 55) +
+  annotate("text", x = 75, y = 16.5, label = am_peak_avg_spd_vancouver, colour = "#F47922", fontface = 2) +
+  
+  # for Montréal
+  annotate("text", x = 228, y = 7.25, label = avg_dist_montréal, colour = "#055c9f", fontface = "bold", angle = 55) +
+  annotate("text", x = 53, y = 11.8, label = am_peak_avg_spd_montréal, colour = "#055c9f", fontface = 2) +
+  
+  # for Toronto
+  annotate("text", x = 270, y = 7.25, label = avg_dist_toronto, colour = "#50aa26", fontface = "bold", angle = 55) +
+  annotate("text", x = 75, y = 11, label = am_peak_avg_spd_toronto, colour = "#50aa26", fontface = 2) +
+  
+  # for Bologna
+  annotate("text", x = 335, y = 7.25, label = avg_dist_bologna, colour = "#c90d01", fontface = "bold", angle = 55) +
+  annotate("text", x = 53, y = 14.2, label = am_peak_avg_spd_bologna, colour = "#c90d01", fontface = 2) +
+  
+  # for Milan
+  annotate("text", x = 305, y = 6.75, label = avg_dist_milan, colour = "#7c39d4", fontface = "bold", angle = 55) +
+  annotate("text", x = 53, y = 10.4, label = am_peak_avg_spd_milan, colour = "#7c39d4", fontface = 2) +
+  
+  # for Zürich
+  annotate("text", x = 380, y = 6.75, label = avg_dist_zürich, colour = "#595959", fontface = "bold", angle = 55) +
+  annotate("text", x = 53, y = 15.9, label = format(round(am_peak_avg_spd_zürich, 1), nsmall = 1), colour = "#595959", fontface = 2) +
+  
+  # for Vienna
+  annotate("text", x = 410, y = 6.75, label = avg_dist_vienna, colour = "#d3af00", fontface = "bold", angle = 55) +
+  annotate("text", x = 75, y = 15.1, label = am_peak_avg_spd_vienna, colour = "#d3af00", fontface = 2) +
+  
+  # Create spacing between plot and axis titles
+  theme(axis.title.y = element_text(margin = margin(t = 0, r = 30, b = 0, l = 0)),
+        axis.title.x = element_text(margin = margin(t = 30, r = 0, b = 0, l = 0)),
+        axis.text=element_text(size = 8)) +
+        # axis.text.y = element_text(hjust = 0)) +
+  
+  # Print legend note
+  annotate("text", x = 930, y = 11, label = paste("Dashed lines \nrepresent \naverages for \neach city"), fontface = "italic", size = 3.5, hjust = 0) +
+  
+  labs(
+    title = "Average scheduled speed vs. average stop distance (AM peak, standard buses)",
+    x = "Average stop distance (m)", y = "Average scheduled speed (km/h)",
+    caption = "\n Ahasan Bhuiyan, Data: Italian (urban) Letters, TSPR 2022, TransLink Bus Schedules, Google Maps",
+    color = "City"
+  ) +
+  scale_color_manual(values = city_colors)
+  # scale_colour_manual(values = cbPalette)
+```
+
+It becomes apparent that Montréal and Toronto have the smallest average stop spacing and consequently some of the slowest standard buses. Meanwhile, Milan has larger stop spacing values, but suffers from the lack of other transit priority elements, ending up with a slower speed.[^ref2] Metro Vancouver's stop spacing is more in line with that found in the European cities. 
+
+While Metro Vancouver wins out on average speed for its standard buses in this comparison, the exact speed rankings should be taken with a grain of salt given the limited sample size of bus routes. Moreover, as hinted with Milan, there's more to bus network performance than just stop spacing, and Metro Vancouver should look at other factors as well as it continues to upgrade its transit system.
+
+
+
+[^ref2]: See footnote 9
