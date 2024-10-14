@@ -193,7 +193,7 @@
     "href": "projects/2024/bus_performance_analysis/index.html#appendix-a-map-of-ftn-bus-speeds-in-the-city-of-vancouver",
     "title": "Metro Vancouver Bus Performance Analysis",
     "section": "Appendix A: Map of FTN Bus Speeds in the City of Vancouver",
-    "text": "Appendix A: Map of FTN Bus Speeds in the City of Vancouver\nWhile working on this analysis into bus speeds, I was also learning how to use GIS software. As such, I combined the two ventures to a create a map of scheduled bus speeds inside the City of Vancouver. Specifically, I mapped bus routes from the Frequent Transit Network, a collection of routes that run at least every 15 minutes for most of the day, during the AM peak.\n\n\n\nFigure 5. FTN bus speeds in Vancouver."
+    "text": "Appendix A: Map of FTN Bus Speeds in the City of Vancouver\nWhile working on this analysis into bus speeds, I was also learning how to use GIS software. As such, I combined the two ventures to a create a map of scheduled bus speeds inside the City of Vancouver. Specifically, I mapped bus routes from the Frequent Transit Network, a collection of routes that run at least every 15 minutes for most of the day, during the AM peak.\nAs seen in the figure below, the slowest routes tend to be north-south routes along with those within Downtown Vancouver. These routes also tend to have the smallest stop spacing.\n\n\n\nFigure 5. FTN bus speeds in Vancouver."
   },
   {
     "objectID": "projects/2024/bus_performance_analysis/index.html#appendix-b-metro-vancouver-bus-speed-data",

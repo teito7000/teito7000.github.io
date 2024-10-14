@@ -347,7 +347,6 @@ With logarithmic regression, a trend line can be found relating average stop dis
 
 ```{r}
 #| label: am-peak-regression
-#| classes: preview-image
 #| echo: false
 
 # Log model
@@ -783,7 +782,9 @@ Additional inspiration came from Jens von Bergmann's blog posts at [Mountain Doo
 
 While working on this analysis into bus speeds, I was also learning how to use GIS software. As such, I combined the two ventures to a create a map of scheduled bus speeds inside the City of Vancouver. Specifically, I mapped bus routes from the Frequent Transit Network, a collection of routes that run at least every 15 minutes for most of the day, during the AM peak.
 
-![Figure 5. FTN bus speeds in Vancouver.](data/map_vancouver_bus_speeds.png)
+As seen in the figure below, the slowest routes tend to be north-south routes along with those within Downtown Vancouver. These routes also tend to have the smallest stop spacing.
+
+![Figure 5. FTN bus speeds in Vancouver.](data/map_vancouver_bus_speeds.png){.preview-image}
 
 ## Appendix B: Metro Vancouver Bus Speed Data
 
