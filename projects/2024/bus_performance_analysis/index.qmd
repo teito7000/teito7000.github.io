@@ -40,7 +40,7 @@ Both the RapidBus and the 99 B-Line are characterized as "BRT-lite" routes, havi
 
 ### Data Sources
 
-The data that was examined for this analysis consisted of the 36 busiest bus routes in Metro Vancouver according to annual boardings in 2022, as found in the Transit Service Performance Review (TSPR) for that year.[^4] This includes the 99 B-Line, all 5 RapidBus routes, and 30 standard bus routes to provide a decent sample size. For each route, one direction of travel was chosen for inspection, that being the direction TransLink labels as "1". The scheduled running time, the time it takes to travel from one terminus to another, was collected for both the AM and PM peak periods (around 8 AM and 5 PM) using bus schedules issued in 2023 September.[^5] Distances were obtained from the 2022 TSPR Bus/SeaBus Summaries[^6] and validated using Google Maps for accuracy. If there was a large discrepancy of a few kilometres or more, the Google Maps measurement was preferred. Then, average scheduled speeds were calculated using the simple equation relating speed, distance, and time. Finally, the number of bus stops on a particular route was manually tallied from the bus schedules. Please refer to the Appendix for access to the dataset.
+The data that was examined for this analysis consisted of the 36 busiest bus routes in Metro Vancouver according to annual boardings in 2022, as found in the Transit Service Performance Review (TSPR) for that year.[^4] This includes the 99 B-Line, all 5 RapidBus routes, and 30 standard bus routes to provide a decent sample size. For each route, one direction of travel was chosen for inspection, that being the direction TransLink labels as "1". The scheduled running time, the time it takes to travel from one terminus to another, was collected for both the AM and PM peak periods (around 8 AM and 5 PM) using bus schedules issued in 2023 September.[^5] Distances were obtained from the 2022 TSPR Bus/SeaBus Summaries[^6] and validated using Google Maps for accuracy. If there was a large discrepancy of a few kilometres or more, the Google Maps measurement was preferred. Then, average scheduled speeds were calculated using the simple equation relating speed, distance, and time. Finally, the number of bus stops on a particular route was manually tallied from the bus schedules.
 
 [^4]: https://www.translink.ca/plans-and-projects/strategies-plans-and-guidelines/managing-the-transit-network#2022-transit-service-performance-review
 
@@ -484,7 +484,7 @@ Astute readers will note that while most bus routes appear to fit the logarithmi
 
 ### Multinational Stop Spacing Comparison
 
-To see how Metro Vancouver compares with other metropolitan areas in regards to stop spacing and transit speeds, data from Chitti's original post[^11] is borrowed and added to. The set of cities includes the Canadian metropolises of Montréal and Toronto along with international counterparts from Europe. Focus is placed on standard bus performance during the AM peak. so the RapidBus and B-Line routes are excluded.
+To see how Metro Vancouver compares with other metropolitan areas in regards to stop spacing and transit speeds, data from Marco Chitti's original post[^11] is borrowed and added to. The set of cities includes the Canadian metropolises of Montréal and Toronto along with international counterparts from Europe. Focus is placed on standard bus performance during the AM peak. so the RapidBus and B-Line routes are excluded.
 
 [^11]: See footnote 9
 
@@ -626,7 +626,6 @@ As mentioned previously, when compared to the 30 busiest standard buses, the BRT
 
 Not all the BRT-lite routes have local counterparts applicable for an apples-to-apples comparison. The R1 doesn't have a local equivalent that serves both the King George Boulevard and 104 St. Meanwhile, the R2's local sibling, the 255, shares the same route only for a short 3-4 km, where the benefits of a "rapid" route would not be as pronounced. As such, only the 99 B-Line, R3, R4, and R5 were selected for comparison as they have shared sections of at least 5 km. As it is clear that the BRT-lite routes possess an average speed advance, the focus is shifted onto the time savings afforded by the BRT-lite routes. The results are as follows for the AM peak.
 
-
 ```{=html}
 <table>
   <caption>Table 1. AM peak travel time comparison.</caption>
@@ -690,4 +689,102 @@ Not all the BRT-lite routes have local counterparts applicable for an apples-to-
 </table>
 ```
 
-The success of the BRT-lite implementations is evident through the large
+The success of the RapidBus implementations is evident through the large relative time savings associated with the R3, R4, and R5 routes as compared to the legacy 99 B-Line. For completeness, the PM peak time savings are also listed below.
+
+```{=html}
+<table>
+  <caption>Table 2. PM peak travel time comparison.</caption>
+  <tr>
+    <th colspan="8" style="text-align: center;"><b>PM Peak</b></th>
+  </tr>
+  <tr>
+    <th colspan="2" style="text-align: center;"><b>Bus route</b></th>
+    <th rowspan="2" style="text-align: center;"><b>From</b></th>
+    <th rowspan="2" style="text-align: center;"><b>To</b></th>
+    <th rowspan="2" style="text-align: center;"><b>Shared section (m)</b></th>
+    <th colspan="2" style="text-align: center;"><b>Scheduled running time (mins)</b></th>
+    <th style="text-align: center;"><b>BRT-lite time savings</b></th>
+  </tr>
+  <tr>
+    <th style="text-align: center;"><b>Local</b></th>
+    <th style="text-align: center;"><b>BRT-lite</b></th>
+    <th style="text-align: center;"><b>Local</b></th>
+    <th style="text-align: center;"><b>BRT-lite</b></th>
+  </tr>
+  <tr>
+    <td>9</td>
+    <td>99 B-Line</td>
+    <td>Commercial-Broadway Station</td>
+    <td>UBC</td>
+    <td>14100</td>
+    <td>52</td>
+    <td>41</td>
+    <td>21% (11 mins)</td>
+  </tr>
+  <tr>
+    <td>701</td>
+    <td>R3</td>
+    <td>Haney Place</td>
+    <td>Coquitlam Central Station</td>
+    <td>17200</td>
+    <td>51</td>
+    <td>36</td>
+    <td>29% (15 mins)</td>
+  </tr>
+  <tr>
+    <td>41</td>
+    <td>R4</td>
+    <td>Joyce-Collingwood Station</td>
+    <td>Dunbar Loop</td>
+    <td>11500</td>
+    <td>42</td>
+    <td>26</td>
+    <td>38% (16 mins)</td>
+  </tr>
+  <tr>
+    <td>14</td>
+    <td>R5</td>
+    <td>Kootenay Loop</td>
+    <td>Hastings St @ Richards St (local) / Granville St (BRT-lite)</td>
+    <td>6410</td>
+    <td>29</td>
+    <td>24</td>
+    <td>17% (5 mins)</td>
+  </tr>
+</table>
+```
+
+### Other Contributing Factors
+
+While the focus thus far has primarily been on stop spacing within Metro Vancouver's bus network and its relation to average scheduled speeds, several other elements play a role in the transit speed equation. Both Chitti and TransLink point out bus bulbs and all-door boarding as bus priority measures worth considering to reduce dwell times.[^13] [^14] The greater speeds attributed to BRT-lite routes in this dataset is in part due to thse features. It's important to note that municipalities have the jurisdiction to enact these infrastructure changes with little required oversight, should they have the political will to do so.[^15]
+
+Chitti goes further and points out that not all bus lanes are created equally. Ineffective implementations will not result in greater speeds. Lack of transit signal priority, lack of bus lane enforcement, excessive numbers of controlled intersections, and shared bus lane/right turn lanes can all be impediments to functional bus lanes.[^16] For a more in-depth look at how bus lanes can be successfully integrated with other transit priority elements, readers are encouraged to explore Chitti's original work as he describes Bologna's layered approach.
+
+[^13]: See footnote 9
+[^14]: See footnote 1
+[^15]: See footnote 1
+[^16]: See footnote 9
+
+## Conclusion
+
+At the time of writing, the latest RapidBus route, the R6, is nearing completion at a projected cost of $33 million CAD[^17]. BRT-lite routes play a key role in providing speed and capacity on important corridors throughout the region, but it is impossible to introduce RapidBuses on every Metro Vancouver bus route without a bottomless wallet. Yet as shown in the data exploration, it is not necessary to have a BRT-lite route with BRT-lite levels of infrastructure expenditure to achieve faster speeds. Careful and deliberate planning can greatly improve the performance of standard buses on routes with smaller ridership, with a key step being the consolidation of bus stops. The logarithmic nature of stop spacing means that large returns on investment (increased speed, reduced operating expenditures, greater ridership potential[^18] [^19]) can be achieved with only marginal increases to average stop distance. No longer destined to be slow forever, improved standard bus routes can usher in a new era of mixed-traffic public transit, reaching far beyond the geographical limits of BRT-lite routes.
+
+[^17]: https://www.translink.ca/plans-and-projects/projects/bus-projects/r6-scott-road-rapidbus
+[^18]: See footnote 9
+[^19]: See footnote 1
+
+## Acknowledgements
+
+This look at bus speeds and stop spacing was largely inspired by Marco Chitti's excellent [Substack post](https://marcochitti.substack.com/p/getting-bus-priority-right-lessons) comparing bus performances in Montréal and Bologna, as evident by the number of times I've referenced it. I wanted to extend Chitti's analysis to Metro Vancouver, building off the data he already collected.
+
+Additional inspiration came from Jens von Bergmann's blog posts at [Mountain Doodles](https://doodles.mountainmath.ca/), where he uses data to answer intriguing questions about transportation and housing in the region. My interest in using R for making plots was influenced by the many insightful examples Jens has published online.
+
+## Appendix A: Map of FTN Bus Speeds in the City of Vancouver
+
+While working on this analysis into bus speeds, I was also learning how to use GIS software. As such, I combined the two ventures to a create a map of scheduled bus speeds inside the City of Vancouver. Specifically, I mapped bus routes from the Frequent Transit Network, a collection of routes that run at least every 15 minutes for most of the day, during the AM peak.
+
+![Figure 5. FTN bus speeds in Vancouver.](data/map_vancouver_bus_speeds.png)
+
+## Appendix B: Metro Vancouver Bus Speed Data
+
+The data used for this analysis can be found [here](https://github.com/teito7000/teito7000.github.io/blob/main/projects/2024/bus_performance_analysis/data/bus_perfomance_comparison.xlsx). Like Chitti's original data, readers are welcome to borrow and improve upon my results.
