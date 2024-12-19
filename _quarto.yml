@@ -13,7 +13,7 @@ website:
         # text: Home
   page-footer:
     center:
-      "© 2024 Ahasan Bhuiyan"
+      "© Ahasan Bhuiyan"
 
 format:
   html:
