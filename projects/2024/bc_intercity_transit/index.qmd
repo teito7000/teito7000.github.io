@@ -28,7 +28,7 @@ Outside of Metro Vancouver, lower population densities present challenges for pu
 
 ## Corridors Hiding in Plain Sight
 
-![Figure 1. Map of BC census subdivisions by population density and provincial highways](2021_bc_csd_pop_density_and_highways.png){.preview-image}
+![Figure 1. Map of BC census subdivisions by population density and provincial highways.](2021_bc_csd_pop_density_and_highways.png){.preview-image}
 
 ::: callout-note
 The provincial highways were filtered out of GeoBC's Digital Road Atlas (DRA), whose classifications for "highway route" do not always align with the level of physical infrastructure typically associated with highways. For instance, several arterial roads in Metro Vancouver like the Fraser "Highway", Kingsway, and Granville St are listed as highway routes in the DRA, despite having features such as frequent signallized intersections and street parking.
@@ -46,7 +46,7 @@ That is not to say that intercity rail connections between the aforementioned re
 
 ## No Free Lunch in Transit Planning
 
-Regardless of the mode, careful planning must be done to ensure that transit system works efficiently.
+Regardless of the mode, careful planning must be done to ensure that the transit system works efficiently.
 
 The bus or rail line should leave the highway median to more directly serve significant population centres not adjacent to the transportation artery. For example, while Highway 97 does pass through central Kelowna and connect with the University of British Columbia's Okanagan Campus, transit would be better off taking a diversion through Highway 33 and Rutland Road in the city's eastern neighbourhoods, as that brings transit access closer to the established density, retail, and employment.
 
