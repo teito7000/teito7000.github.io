@@ -72,7 +72,7 @@ library(ggthemes)
 
 # Read in data
 allBuses <- read_excel("bus_perfomance_comparison.xlsx")
-allCities <- read_excel("standard_bus_comparison.xlsx")
+allCities <- read_excel("data/standard_bus_comparison.xlsx")
 
 # Filter datasets based on time
 am_peak <- filter(allBuses, time == "AM Peak")
@@ -755,7 +755,7 @@ The success of the RapidBus implementations is evident through the large relativ
 
 ### Other Contributing Factors
 
-While the focus thus far has primarily been on stop spacing within Metro Vancouver's bus network and its relation to average scheduled speeds, several other elements play a role in the transit speed equation. Both Chitti and TransLink point out bus bulbs and all-door boarding as bus priority measures worth considering to reduce dwell times.[^13] [^14] The greater speeds attributed to BRT-lite routes in this dataset is in part due to thse features. It's important to note that municipalities have the jurisdiction to enact these infrastructure changes with little required oversight, should they have the political will to do so.[^15]
+While the focus thus far has primarily been on stop spacing within Metro Vancouver's bus network and its relation to average scheduled speeds, several other elements play a role in the transit speed equation. Both Chitti and TransLink point out bus bulbs and all-door boarding as bus priority measures worth considering to reduce dwell times.[^13] [^14] The greater speeds attributed to BRT-lite routes in this dataset is in part due to those features. It's important to note that municipalities have the jurisdiction to enact these infrastructure changes with little required oversight, should they have the political will to do so.[^15]
 
 Chitti goes further and points out that not all bus lanes are created equally. Ineffective implementations will not result in greater speeds. Lack of transit signal priority, lack of bus lane enforcement, excessive numbers of controlled intersections, and shared bus lane/right turn lanes can all be impediments to functional bus lanes.[^16] For a more in-depth look at how bus lanes can be successfully integrated with other transit priority elements, readers are encouraged to explore Chitti's original work as he describes Bologna's layered approach.
 
