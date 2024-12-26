@@ -71,8 +71,8 @@ library(ggthemes)
 #| echo: false
 
 # Read in data
-allBuses <- read_excel("data/bus_perfomance_comparison.xlsx")
-allCities <- read_excel("data/standard_bus_comparison.xlsx")
+allBuses <- read_excel("bus_perfomance_comparison.xlsx")
+allCities <- read_excel("standard_bus_comparison.xlsx")
 
 # Filter datasets based on time
 am_peak <- filter(allBuses, time == "AM Peak")
@@ -784,8 +784,8 @@ While working on this analysis into bus speeds, I was also learning how to use G
 
 As seen in the figure below, the slowest routes tend to be north-south routes along with those within Downtown Vancouver. These routes also tend to have the smallest stop spacing.
 
-![Figure 5. FTN bus speeds in Vancouver.](data/map_vancouver_bus_speeds.png){.preview-image}
+![Figure 5. FTN bus speeds in Vancouver.](map_vancouver_bus_speeds.png){.preview-image}
 
 ## Appendix B: Metro Vancouver Bus Speed Data
 
-The data used for this analysis can be found [here](https://github.com/teito7000/teito7000.github.io/blob/main/projects/2024/bus_performance_analysis/data/bus_perfomance_comparison.xlsx). Like Chitti's original data, readers are welcome to borrow and improve upon my results.
+The data used for this analysis can be found [here](https://github.com/teito7000/teito7000.github.io/blob/main/projects/2024/bus_performance_analysis/bus_perfomance_comparison.xlsx). Like Chitti's original data, readers are welcome to borrow and improve upon my results.
