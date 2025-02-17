@@ -4,6 +4,7 @@ date: "2024-02-08"
 categories:
   - data
   - map
+  - R
   - transit
 description: "Analysis of scheduled bus speeds with respect to stop spacing"
 page-layout: full

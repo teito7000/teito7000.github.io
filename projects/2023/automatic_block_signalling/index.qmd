@@ -3,6 +3,7 @@ title: "Automatic Block Signalling for a Model Railway"
 date: "2023-08-12"
 categories:
   - C
+  - electronics
   - railway signalling
 description: "Train detection and signal control system controlled by an Arduino"
 page-layout: full
@@ -61,7 +62,7 @@ The full code can be seen [here](https://github.com/teito7000/Automatic_Block_Si
 
 ### Connections
 
-While I only modelled a single block for my demo, the amount of wiring was quite large. Although the system design does allow for additional blocks to be daisy-chained together, the wiring would again be a challenge. Modifications to the code could allow a single Arduino MCU to control several blocks (unlike the current implementation where each block requires an Arduino), which would reduce some of the required connections.
+While I only modelled a single block for my demo, the amount of wiring was quite large. Although the system design does allow for additional blocks to be daisy-chained together, the wiring would again be a challenge. Modifications to the code could allow a single Arduino microcontroller (MCU) to control several blocks (unlike the current implementation where each block requires an Arduino), which would reduce some of the required connections.
 
 ### IR Sensors
 

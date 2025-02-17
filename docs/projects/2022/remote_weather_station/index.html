@@ -6,10 +6,10 @@
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
-<meta name="dcterms.date" content="2023-08-12">
-<meta name="description" content="Train detection and signal control system controlled by an Arduino">
+<meta name="dcterms.date" content="2022-07-21">
+<meta name="description" content="Wireless weather data collection and visualization using microcontrollers">
 
-<title>teito7000 - Automatic Block Signalling for a Model Railway</title>
+<title>teito7000 - Remote Weather Station</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -106,12 +106,7 @@ ul.task-list li input[type="checkbox"] {
   <li><a href="#background" id="toc-background" class="nav-link active" data-scroll-target="#background">Background</a></li>
   <li><a href="#system-design" id="toc-system-design" class="nav-link" data-scroll-target="#system-design">System Design</a></li>
   <li><a href="#software-design" id="toc-software-design" class="nav-link" data-scroll-target="#software-design">Software Design</a></li>
-  <li><a href="#challenges-and-limitations" id="toc-challenges-and-limitations" class="nav-link" data-scroll-target="#challenges-and-limitations">Challenges and Limitations</a>
-  <ul class="collapse">
-  <li><a href="#connections" id="toc-connections" class="nav-link" data-scroll-target="#connections">Connections</a></li>
-  <li><a href="#ir-sensors" id="toc-ir-sensors" class="nav-link" data-scroll-target="#ir-sensors">IR Sensors</a></li>
-  <li><a href="#time-delay" id="toc-time-delay" class="nav-link" data-scroll-target="#time-delay">Time Delay</a></li>
-  </ul></li>
+  <li><a href="#challenges-and-debugging" id="toc-challenges-and-debugging" class="nav-link" data-scroll-target="#challenges-and-debugging">Challenges and Debugging</a></li>
   <li><a href="#conclusion" id="toc-conclusion" class="nav-link" data-scroll-target="#conclusion">Conclusion</a></li>
   </ul>
 </nav>
@@ -121,17 +116,17 @@ ul.task-list li input[type="checkbox"] {
 
 <header id="title-block-header" class="quarto-title-block default">
 <div class="quarto-title">
-<h1 class="title">Automatic Block Signalling for a Model Railway</h1>
+<h1 class="title">Remote Weather Station</h1>
   <div class="quarto-categories">
     <div class="quarto-category">C</div>
+    <div class="quarto-category">data</div>
     <div class="quarto-category">electronics</div>
-    <div class="quarto-category">railway signalling</div>
   </div>
   </div>
 
 <div>
   <div class="description">
-    Train detection and signal control system controlled by an Arduino
+    Wireless weather data collection and visualization using microcontrollers
   </div>
 </div>
 
@@ -142,7 +137,7 @@ ul.task-list li input[type="checkbox"] {
     <div>
     <div class="quarto-title-meta-heading">Published</div>
     <div class="quarto-title-meta-contents">
-      <p class="date">August 12, 2023</p>
+      <p class="date">July 21, 2022</p>
     </div>
   </div>
   
@@ -154,111 +149,73 @@ ul.task-list li input[type="checkbox"] {
 
 <section id="background" class="level2">
 <h2 class="anchored" data-anchor-id="background">Background</h2>
-<p>An integral part towards achieving safe railway operation is to have a signalling system that prevents unsafe train movements. Key functions can include ensuring a safe separation distance between trains and prohibiting trains from taking a conflicting route, such as a section of track that is already occupied. Signalling systems are of particular interest to me because they require integration of several components, from train detection to robust control algorithms.</p>
-<p>I was preparing for my <a href="https://www.irse.org/Qualifications-Careers/IRSE-Exam">IRSE Professional Exam</a> (railway systems engineering) during the summer of 2023, so I thought it was a good time to try to create a small signalling system for a model railway. The technical requirements for the project were as follows:</p>
+<p>While commuting in spring 2022, I found myself mesmerized listening to a series of podcasts about climate research in Antarctica. Given the inhospitable nature of the frozen continent, it’s unsurprising that a lot of the data collection is done through remote sensing setups, allowing researchers to monitor Antarctica’s weather without having to winter there. One such example is the <a href="https://amrdc.ssec.wisc.edu/about/aws-program">Antarctic Automatic Weather Station program</a>.</p>
+<p>With this in mind, I wanted to make a remote sensing station as well, albeit designed for my home where the operating conditions aren’t as extreme as in Antarctica. The objectives for this project were as follows:</p>
 <ul>
-<li>Be able to detect the presence of trains within a defined block section</li>
-<li>Enable LED signals to accurately display the state of a block section (e.g., occupied or vacant)</li>
-<li>Integrate sensors that did not require significant modification of the model railway</li>
-<li>Make a modular system that can easier be extended for longer lengths or varying sizes of block sections</li>
+<li>Measure the temperature, humidity, and pressure in relevant units using sensors connected to a microcontroller (MCU)</li>
+<li>Wirelessly transfer the measurements to a second offsite MCU, which exports the data to MS Excel to be saved and graphed live</li>
+<li>Continuously back up the recordings with timestamps onto a micro SD card</li>
+<li>Produce schematics for my project using an Electronic Design Automation (EDA) program</li>
 </ul>
 </section>
 <section id="system-design" class="level2">
 <h2 class="anchored" data-anchor-id="system-design">System Design</h2>
-<p>I did some research to see if anyone else had tried to use Arduino as part of a railway signalling system. One of the most promising applications was from a <a href="https://youtu.be/Yg6mkOfl6I8?si=zydbxgZjwzDelwt1">YouTube video</a> that used infrared (IR) sensors as triggers for when a train enters a section of track, referred to as a “block”. IR sensors can be placed adjacent to the track, whereas another popular sensor type, current sensors, required modifications to the track to electrically isolate each section. Based on this advantage, I chose to incorporate IR sensors into my design.</p>
-<p>Each block section had two IR sensors, one at each end. If either sensor was triggered, it meant that a train had entered the block. By examining which sensor was activated first, the Arduino could determine the direction from which the train entered the block. This was the entry sensor. Leading on from that, the system could determine when the train left the block section by noting the moment when the entry sensor was no longer triggered and the other sensor for that block, the exit sensor, was initiated. Of course, depending on the direction of travel, the roles of entry and exit sensor switch.</p>
-<p>Additionally, voltage level logic was used as a basic form of communication between blocks to let adjacent blocks know that they are occupied, i.e., a train is present in that section. This is critical because adjacent blocks can convey this information to the train via signals, informing the (nonexistent in this case) driver to perhaps adopt a slower speed limit since they may have to stop by the time the train reaches the adjacent section. Combining all of the aforementioned logic, each block could be said to be in one of five states at any given point. Each state shows whether trains from each direction can safety enter the block. Please refer to Table 1 for an overview of the possible states and Fig. 1 for a flowchart describing how the system moves from one state to another.</p>
-<table class="table">
-<caption>Table 1. Possible block states.</caption>
-<colgroup>
-<col style="width: 25%">
-<col style="width: 25%">
-<col style="width: 25%">
-<col style="width: 25%">
-</colgroup>
-<thead>
-<tr class="header">
-<th>State</th>
-<th>Meaning</th>
-<th>Can trains enter from the left?</th>
-<th>Can trains enter from the right?</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td>Green-Green</td>
-<td>Block and adjacent blocks are clear</td>
-<td>Yes</td>
-<td>Yes</td>
-</tr>
-<tr class="even">
-<td>Green-Yellow</td>
-<td>Block is clear, but the block to the left is occupied</td>
-<td>Yes</td>
-<td>Yes, but with caution/reduced speed</td>
-</tr>
-<tr class="odd">
-<td>Yellow-Green</td>
-<td>Block is clear, but the block to the right is occupied</td>
-<td>Yes, but with caution/reduced speed</td>
-<td>Yes</td>
-</tr>
-<tr class="even">
-<td>Yellow-Yellow</td>
-<td>EITHER block is clear but both adjacent blocks are occupied OR block was only recently cleared</td>
-<td>Yes, but with caution/reduced speed</td>
-<td>Yes, but with caution/reduced speed</td>
-</tr>
-<tr class="odd">
-<td>Red-Red</td>
-<td>Block is occupied</td>
-<td>No</td>
-<td>No</td>
-</tr>
-</tbody>
-</table>
+<p>This project required two MCUs, one to transit data and one to receive it. I decided to use Arduino MCUs as I already had some at my disposal.</p>
+<p>The transmitter Arduino (TX) was connecting to climate sensors along with a radio frequency (RF) transceiver. The sensors included a DHT22 to measure temperature and humidity, as well as a BMP280 to measure atmospheric pressure. The RF transceiver I used was the NRF24L01, which uses radio waves to transit data. Power to the TX Arduino was provided via a switched-mode power supply connected to AC mains electricity. It would also be possible to power the MCU with a battery, but as this project was within my home, that was unnecessary.</p>
+<p>The receiver Arduino (RX) was connected to a micro SD card, a real time clock (RTC), and another NRF24L01 RF transceiver. The specific RTC I used was the DS3231 which can compensate for variances in temperature that would otherwise affect the oscillation frequency of RTCs. This compensation is done through an internal cystal oscillator. The RX Arduino was powered through USB connected to my computer. This USB connection was also used to transfer data from the MCU to Excel over UART.</p>
+<p>The schematics for both Arduino MCUs can be seen in Fig. 1 - 2. KiCad was used to make these schematics. The various modules were connected to the MCUs using a handful of communication protocols, including I2C and SPI, the latter of which posed some difficulties as explained later.</p>
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
-<p><img src="flowchart.png" class="img-fluid figure-img"></p>
-<figcaption class="figure-caption">Figure 1. System flowchart.</figcaption>
+<p><img src="TX Arduino.png" class="img-fluid figure-img"></p>
+<figcaption class="figure-caption">Figure 1. Transmitter Arduino schematic.</figcaption>
 </figure>
 </div>
-<p>The physical wiring involved for a single block section required two IR sensors, LEDs for signals, along with connections to adjacent blocks for transmitting and receiving states. Since my demo setup had only one block section, I simulated connections to neighbouring blocks using a DIP switch block. Fig. 2 illustrates the entire setup for a single block.</p>
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
-<p><img src="physical_setup.png" class="preview-image img-fluid figure-img"></p>
-<figcaption class="figure-caption">Figure 2. Physical setup.</figcaption>
+<p><img src="RX Arduino.png" class="preview-image img-fluid figure-img"></p>
+<figcaption class="figure-caption">Figure 2. Receiver Arduino schematic.</figcaption>
 </figure>
 </div>
 </section>
 <section id="software-design" class="level2">
 <h2 class="anchored" data-anchor-id="software-design">Software Design</h2>
-<p>The Arduino code for this project revolved around switching from one state to another based on the sensor input.</p>
-<p>Upon startup, the system gets the nominal value of the IR sensors with no train present. This is done by taking the average value of 1000 sensor samples. When figuring out if a sensor has been triggered by a passing train during regular operation, the difference between the nominal sensor value and current sensor value is calculated. The absolute value of this number is then compared to a set threshold. If the difference is greater than the threshold, a train has been detected.</p>
-<p>The state of the system at any given time depends on both the previous state as well as the sensor input. States are saved in an enum, and the enum element changes based on the logic seen in Fig. 1. For each state, an appropriate combination of LEDs are enabled (similar to a traffic light) using a switch expression and adjacent blocks may receive a voltage signal. Several optimizations were done throughout the testing phase, such as removing redundant sensor readings.</p>
-<p>The full code can be seen <a href="https://github.com/teito7000/Automatic_Block_Signalling">here</a>.</p>
+<p>A separate C program was written for each Arduino MCU. For the TX Arduino code, all the sensor measurements were read and saved into a struct. This contained the temperature, relative humidity, dew point temperature, and atmospheric pressure. Relative humidity is dependent on the temperature and is thus not the best statistic for day-to-day use. Instead, the calculated dew point temperature takes into account both the temperature and relative humidity, providing a much more realistic measure of humidity. Once all the measurements are recorded, the contents of the struct are sent over to the RF transceiver module for transmission.</p>
+<p>The RX Arduino program constantly checks to see if any incoming data is present. Once it has found something, it saves the data into a struct of its own. The weather data is also saved to a micro SD card in csv format, along with the time the measurement was taken, provided by the RTC of course. Another function ensures that all the date and time values have leading zeros if they are single digits for consistency. For example, dates appear as 2022-07-01 and not 2022-7-1. Finally, the data is exported to the computer and into Excel, where it is saved into a table and automatically plotted in several graphs.</p>
+<p>The full code for this project can be seen <a href="https://github.com/teito7000/Remote_Weather_Station">here</a>.</p>
 </section>
-<section id="challenges-and-limitations" class="level2">
-<h2 class="anchored" data-anchor-id="challenges-and-limitations">Challenges and Limitations</h2>
-<section id="connections" class="level3">
-<h3 class="anchored" data-anchor-id="connections">Connections</h3>
-<p>While I only modelled a single block for my demo, the amount of wiring was quite large. Although the system design does allow for additional blocks to be daisy-chained together, the wiring would again be a challenge. Modifications to the code could allow a single Arduino microcontroller (MCU) to control several blocks (unlike the current implementation where each block requires an Arduino), which would reduce some of the required connections.</p>
-</section>
-<section id="ir-sensors" class="level3">
-<h3 class="anchored" data-anchor-id="ir-sensors">IR Sensors</h3>
-<p>By far the most difficult aspect of this project was ensuring that the IR sensors behaved in a reliable manner. Some of them would often get stuck in a non-triggered or permanently-triggered state, while others would not provide robust readings. The IR sensors also work as a pair for each block, which means that both of them need to be activated by a train during regular operation. If a train enters a block and reverses out the same way, thereby only making contact with a single IR sensor, that block will not proceed to the <em>clear</em> state. Other sensor types, such as a current sensor, can deal with situations like these (and simplify the state switching logic), albeit at the cost of more intrusive installations.</p>
-<p>It should be mentioned that in a real-world setting, IR sensors would definitely not be chosen, as they can be triggered by a trains, falling leaves, or almost anything else. Many signalling systems therefore rely on track circuits or axle counters as better sensing mechanisms.</p>
-</section>
-<section id="time-delay" class="level3">
-<h3 class="anchored" data-anchor-id="time-delay">Time Delay</h3>
-<p>Presently, there is a 250 ms delay in the while loop of the program, which was added to make debugging easier so that text in the serial monitor could be read. However, for practical use, this delay could be omitted or reduced to 100 ms or less. The degree to which the delay can impact system operation depends on the track layout, specifically the smallest amount of time it takes for a train to enter and exit a block.</p>
-</section>
+<section id="challenges-and-debugging" class="level2">
+<h2 class="anchored" data-anchor-id="challenges-and-debugging">Challenges and Debugging</h2>
+<p>By far the largest difficulty in implementing this project was due to the micro SD card module having a fault. The module used the SPI protocol to communicate with the RX Arduino. However, using it would prevent any other SPI component from being able to talk with the RX Arduino. This was due to the POCI (Peripheral Out, Controller In) signal not being able to into high impedance mode when the micro SD card module was not being used. Effectively, it was always drowning out the signals of the other SPI device, the RF transceiver. As I didn’t want to rework the connections on the module, I found another workaround by placing a 1kΩ resistor in series with the module’s POCI pin. This placed some constant resistance. While this solution was the easiest to implement, it was not foolproof and I would recommend looking at other micro SD card modules that don’t have a flawed POCI signal layout.</p>
+<p>On the programming side, initially I used an array to hold all the sensor measurements. However, it soon became confusing to debug since I couldn’t tell which element in the array corresponded with a given measurement. I wanted to add labels to the elements, leading to the change from an array to a struct. Structs enable user-defined names for each element and can also contain different data types, which is useful as the sensor readings had different levels of precision.</p>
 </section>
 <section id="conclusion" class="level2">
 <h2 class="anchored" data-anchor-id="conclusion">Conclusion</h2>
-<p>Real-life signalling systems are notoriously complex, and for good reason as railways depend on them to safely operate without accidents. While my project scratched the surface of what is required by a signalling system, it performed very well for my model train layout. Once sensor integrity issues were sorted out, detection worked reliably, and the algorithm was able to switch between states in a safe, predictable manner. Please refer to Fig. 3 to see a demo of the final system!</p>
-<div class="quarto-video ratio ratio-16x9"><iframe data-external="1" src="https://www.youtube.com/embed/VFScQJ2VNwI" title="" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen=""></iframe></div>
-<p><span class="caption">Figure 3. A demonstration of the signalling system.</span></p>
+<p>While testing out the system, measurements were transmitted every few seconds to quickly form a large dataset to graph, as seen in Fig. 3 - 5 for a recording span of two hours. It should be mentioned that in practice, a long-term weather station would record and transfer data less frequently, every few minutes or even hours, as this level of granularity may not be required.</p>
+<p>Overall, I was very satisfied with the results of this project, as I learned a fair bit about data logging with weather sensors. Beyond the data transfer functionality, the incorporation of MS Excel and the micro SD card also ensured that the recordings were always backed up, providing for an additional layer of redundancy that is often necessary for engineering setups where access to the deployment is restricted.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="Results - Temperature.png" class="img-fluid figure-img"></p>
+<figcaption class="figure-caption">Figure 3. Temperature measurements.</figcaption>
+</figure>
+</div>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="Results - Humidity.png" class="img-fluid figure-img"></p>
+<figcaption class="figure-caption">Figure 4. Humidity measurements.</figcaption>
+</figure>
+</div>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="Results - Pressure.png" class="img-fluid figure-img"></p>
+<figcaption class="figure-caption">Figure 5. Pressure measurements.</figcaption>
+</figure>
+</div>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="RX Data Table.png" class="img-fluid figure-img"></p>
+<figcaption class="figure-caption">Figure 6. Data inputted into Excel.</figcaption>
+</figure>
+</div>
 
 
 </section>
