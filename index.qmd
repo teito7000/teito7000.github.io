@@ -14,4 +14,4 @@ about:
       href: https://github.com/teito7000
 ---
 
-Mechatronic Systems Engineering student at Simon Fraser University. I love learning about transportation systems and data analysis!
+Mechatronic Systems Engineering student at Simon Fraser University. Passionate about rail transportation and data!
