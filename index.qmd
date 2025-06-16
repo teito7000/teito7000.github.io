@@ -12,6 +12,9 @@ about:
     - icon: github
       text: GitHub
       href: https://github.com/teito7000
+    - icon: bluesky
+      text: Bluesky
+      href: https://bsky.app/profile/ef63.bsky.social
 ---
 
 Mechatronic Systems Engineering student at Simon Fraser University. Passionate about rail transportation and data!

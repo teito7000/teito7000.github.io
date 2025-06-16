@@ -3,5 +3,6 @@
 .RData
 .Ruserdata
 projects/**/data/
+*_cache/
 
 /.quarto/
