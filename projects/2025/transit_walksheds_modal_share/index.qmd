@@ -405,6 +405,7 @@ Having mapped out the population within SkyTrain station walksheds, the next que
 
 First, let's look at the mode share for private automobiles across the SkyTrain station walksheds. Note that commuting data is not reported at the Dissemination Block (DB) level; the smallest geographical level for which it is available is the Dissemination Area (DA), so the walksheds used here are a bit more crude.
 
+
 ```{r}
 #| label: get-census-data-mode-share
 #| echo: false
