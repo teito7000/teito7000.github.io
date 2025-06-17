@@ -403,7 +403,7 @@ Lastly, Fraser Highway—though currently lacking a RapidBus route—is the focu
 
 Having mapped out the population within SkyTrain station walksheds, the next question is: how do people in these areas actually choose to commute? Jens von Bergmann has explored this using census data from [2011](https://doodles.mountainmath.ca/posts/2016-04-20-tod-mode-share/) and [2016](https://doodles.mountainmath.ca/posts/2021-10-03-fixing-parking/index.html).
 
-First, let's look at the mode share for private automobiles across the SkyTrain station walksheds. Note that commuting data is not reported at the Dissemination Block (DB) level; the smallest geographical level for which it is available is the Dissemination Area (DA), so the walksheds used here are a bit more crude.
+First, let's look at the mode share for private automobiles across the SkyTrain station walksheds. Note that commuting data is not reported at the Dissemination Block (DB) level; the smallest geographical level for which is available is the Dissemination Area (DA), so the walksheds used here are a bit more crude.
 
 ```{r}
 #| label: get-census-data-mode-share
