@@ -190,7 +190,6 @@ ggplot(pm_peak, aes(x = average_scheduled_speed, y = fct_reorder(route, average_
   scale_fill_manual(values = bus_colors)
 ```
 :::
-<span class="caption">Figure 1. Average scheduled speed during the AM and PM peaks.</span>
 
 Perhaps unsurprisingly, the BRT-lite routes are among the fastest in the AM peak, with an average scheduled speed that is 45% faster than the typical standard bus. That being said, the standard deviation for the BRT-lite routes is also greater, being 6.65 km/h compared to 4.24 km/h for standard buses. The wider spread in speeds for the BRT-lite buses is illustrated by the R2 and R3 routes. The R2 is considerably slower than other RapidBuses, being the only one to have a sub-20-km/h average scheduled speed. Conversely, the R3 is the fastest RapidBus by a generous margin, being almost 2 standard deviations above the mean BRT-lite speed and more than twice as fast as the R2.
 
@@ -337,7 +336,6 @@ ggplot(
   scale_color_manual(values = bus_colors)
 ```
 :::
-<span class="caption">Figure 2. Average scheduled speed vs. average stop spacing during the AM and PM peaks.</span>
 
 Standard buses have an average distance of 365 m between stops, compared to 1336 m for the BRT-lite buses. While increasing the distance between stops does correspond with faster speeds, BRT-lite levels of stop spacing is not the minimum required to see significant improvements. Case in point, there are 5 standard bus routes that enjoy average speeds in excess of 20 km/h during the AM peak. This feat is possible partially due to their above average stop spacing. The route with the most closely packed stops among them, the 321, still has bus stops spaced out 438 m on average, greater than the 356 m seen on the average standard bus route.
 
@@ -470,7 +468,6 @@ ggplot(
   scale_color_manual(values = bus_colors)
 ```
 :::
-<span class="caption">Figure 3. Regression models for the AM and PM peaks.</span>
 
 The benefits of stop spacing increases is not lost on TransLink, as their Bus Stop Balancing program has been active in the last few years, consolidating and relocating bus stops on a number of routes mentioned. Based on their Transit Service Guidelines, TransLink aims to have a stop spacing regimen of 300 to 800 m for routes classified as all-day frequent.[^8]
 
@@ -612,7 +609,6 @@ ggplot(
   scale_color_manual(values = city_colors)
   # scale_colour_manual(values = cbPalette)
 ```
-<span class="caption">Figure 4. Average scheduled speed vs. average stop spacing comparison.</span>
 
 It becomes apparent that Montréal and Toronto have the smallest average stop spacing and consequently some of the slowest standard buses. Meanwhile, Milan has larger stop spacing values, but suffers from the lack of other transit priority elements, ending up with a slower speed.[^12] Metro Vancouver's stop spacing is more in line with that found in the European cities.
 
@@ -628,7 +624,7 @@ Not all the BRT-lite routes have local counterparts applicable for an apples-to-
 
 ```{=html}
 <table>
-  <caption>Table 1. AM peak travel time comparison.</caption>
+  <caption>AM peak travel time comparison.</caption>
   <tr>
     <th colspan="8" style="text-align: center;"><b>AM Peak</b></th>
   </tr>
@@ -693,7 +689,7 @@ The success of the RapidBus implementations is evident through the large relativ
 
 ```{=html}
 <table>
-  <caption>Table 2. PM peak travel time comparison.</caption>
+  <caption>PM peak travel time comparison.</caption>
   <tr>
     <th colspan="8" style="text-align: center;"><b>PM Peak</b></th>
   </tr>
@@ -785,7 +781,7 @@ While working on this analysis into bus speeds, I was also learning how to use G
 
 As seen in the figure below, the slowest routes tend to be north-south routes along with those within Downtown Vancouver. These routes also tend to have the smallest stop spacing.
 
-![Figure 5. FTN bus speeds in Vancouver.](map_vancouver_bus_speeds.png){.preview-image}
+![FTN bus speeds in Vancouver.](map_vancouver_bus_speeds.png){.preview-image}
 
 ## Appendix B: Metro Vancouver Bus Speed Data
 

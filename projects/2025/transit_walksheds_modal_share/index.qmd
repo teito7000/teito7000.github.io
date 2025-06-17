@@ -1,0 +1,643 @@
+---
+title: "Transit Walksheds and Modal Share"
+date: "2025-06-16"
+categories:
+  - data
+  - map
+  - R
+  - transit
+description: "Calculating the population living near rapid transit and how well they use it"
+page-layout: full
+format:
+  html:
+    css: ../../../styles.css
+image: "data/skytrain_walksheds.png"
+---
+
+## Introduction
+
+Inspired by some cool visualizations of transit walksheds in [Montreal (2011)](https://www.cat-bus.com/2013/04/walksheds-visualizedshowing-populations-near-montreal-rail-stations/) and [Vancouver (2016)](https://doodles.mountainmath.ca/posts/2016-04-06-tod/index.html), I wanted to create some interactive maps showcasing walksheds and modal share near SkyTrain stations in Metro Vancouver using data from the 2021 Canadian Census. 
+
+## Methodology
+
+A walkshed is the area around a point that people can walk to within a defined period of time. With regards to transit, it is desired to concentrate population growth within the walksheds of rapid transit stations. These locations increase access to other areas connected by the transit network, making transit a more competitive alternative to driving.
+
+The exact distance that is [walkable](https://humantransit.org/2011/04/basics-walking-distance-to-transit.html) in a given time limit depends on many geometric considerations: existing sidewalks, crosswalks, possible inclines, etc. One simplification is to look at the area within a circle around a point of interest; a radius of 800 metres being commonly used as a 10-minute walkshed.
+
+Transit data for Metro Vancouver can be extracted from TransLink's GTFS feed, giving us locations for all the SkyTrain stations. Note that while Capstan station is being included in this analysis, it along with several adjacent housing developments opened a few years after the 2021 Census.
+
+While the census has population data broken down to the level of Dissemination Block (DB), not every DB is fully within the approximated station walksheds (800m buffers around each station):
+
+```{r}
+#| label: setup
+#| include: false
+
+library(tidyverse)
+library(tidytransit)  # Needed to work with GTFS
+library(sf)           # Needed to work with spatial data
+library(leaflet)      # Needed to make interactive plots
+library(leaflet.minicharts)
+library(cancensus)    # Needed to Canadian census data
+options(
+  cancensus.api_key = Sys.getenv("CM_API_KEY"),
+  cancensus.cache_path = Sys.getenv("CM_CACHE_PATH")
+)
+```
+
+```{r}
+#| label: get-skytrain-data-from-gtfs
+#| echo: false
+#| cache: true
+
+translink_gtfs <- gtfs_as_sf(read_gtfs("data/translink_gtfs_2025_04_28.zip"))
+
+skytrain_stations <- filter_stops(
+  translink_gtfs,
+  route_ids = c("13686", "30052", "30053"), # Route IDs for the three SkyTrain lines
+  service_ids = filter(translink_gtfs$calendar, start_date == "2025-04-21") %>% pull(service_id)
+) %>%
+  mutate(stop_name = str_remove(stop_name, " @.*$")) %>% # Remove everything after the @ (".*" to match any char, "$" to look at the end)
+  group_by(stop_name) %>%
+  summarize(geometry = st_union(geometry)) %>% # Combine platform locations
+  mutate(geometry = st_centroid(geometry), stop_name_short = str_remove(stop_name, "\\s*Station\\s*$")) # Get centroid (point) and remove station suffix and any whitespace
+
+skytrain_lines <- get_route_geometry(translink_gtfs, route_ids = c("13686", "30052", "30053"))
+```
+
+```{r}
+#| label: get-bus-stops-from-gtfs
+#| echo: false
+#| cache: true
+
+bus_stops <- filter_stops(
+  translink_gtfs,
+  route_ids = c("6641", "37808", "38311", "37809", "37810", "37807", "46604"), # Route IDs for the 99 B-Line, R1, R2, R3, R4, R5, R6
+  service_ids = filter(translink_gtfs$calendar, start_date == "2025-04-21") %>% pull(service_id)
+) %>%
+  mutate(
+    stop_name = str_trim(str_remove(stop_name, "Northbound|Southbound|Westbound|Eastbound")),
+    stop_name = str_trim(str_remove(stop_name, " @ Bay \\d+"))
+  ) %>%
+  filter(!str_detect(stop_name, "Layover|Station|South Mall Access|Unloading|Willingdon Ave-|Boundary Rd @ Kitchener St|Seymour St @ W Hastings St|Boundary Rd @ Lougheed Hwy|Lougheed Hwy @ Boundary Loop|E Broadway @ Rupert St|E Broadway @ Renfrew St|E Broadway @ Penticton St|E Broadway @ Nanaimo St|Commercial Dr @ N Grandview Hwy|N Grandview Hwy @ Commercial Dr|E Broadway  @ Fraser St|E Broadway @ Scotia St|E Broadway @ Quebec|W Broadway @ Heather St|W Broadway @ Yew St|Alma St @ W 10 Ave|University Blvd @ Western Parkway|Lonsdale Ave @ W 3rd St|Marine Dr @ Bewicke Ave")) %>%
+  group_by(stop_name) %>%
+  summarize(geometry = st_union(geometry)) %>%
+  mutate(
+    geometry = st_centroid(geometry),
+    stop_name_short = stop_name
+  )
+
+bus_seabus_lines <- get_route_geometry(translink_gtfs, route_ids = c("6641", "37808", "38311", "37809", "37810", "37807", "46604", "6771"))
+
+selected_stops <- bind_rows(skytrain_stations, bus_stops) # Combine SkyTrain stations and bus stops
+
+transit_lines <- read.csv("data/transit_lines.csv")
+selected_stops <- selected_stops %>%
+  left_join(transit_lines, by = c("stop_name_short" = "transit_stop"))
+```
+
+```{r}
+#| label: get-census-data-pop
+#| echo: false
+#| message: false
+
+census_pop <- get_census(dataset = "CA21",
+                         regions = list(CMA = "59933"), # Metro Vancouver CMA
+                         vectors = c(population = "v_CA21_1"), # 2021 Population
+                         level = "DB",
+                         use_cache = TRUE,
+                         geo_format = "sf")
+```
+
+```{r}
+#| label: create-transit-buffers-pop
+#| echo: false
+#| warning: false
+#| cache: true
+
+# Create buffers with 800 metre radius
+transit_buffers <- st_buffer(selected_stops, units::set_units(800, "m"))
+
+# Get area of each census DB
+census_pop <- census_pop %>%
+  mutate(area = as.numeric(st_area(.)))
+
+# Intersect census data with transit buffers
+transit_buffers_overlap <- st_intersection(census_pop, transit_buffers)
+
+# Calculate how much of each transit buffer overlaps with a census DB
+transit_buffers_overlap <- transit_buffers_overlap %>%
+  st_transform(26910) %>% # Needed for area calculation in proper units
+  mutate(
+    area_intersect = as.numeric(st_area(.)),
+    overlap_ratio = area_intersect / area
+  ) 
+
+transit_buffers_overlap <- transit_buffers_overlap %>%
+  st_transform(4326) # Needed to plot using Leaflet
+```
+
+#### All Dissemination Blocks near SkyTrain stations
+
+```{r}
+#| label: visualize-overlap-ratios-pop
+#| echo: false
+
+# Map coordinates
+vancouver_lat <- 49.2295
+vancouver_lng <- -122.9824
+
+# Colour palette
+pal <- colorNumeric(
+  palette = "PRGn",
+  domain = c(0, 1.01) # Go above 1 because palette is not inclusive 
+)
+
+# Reverse of colour palette (needed to switch the legend order)
+pal_rev <- colorNumeric(
+  palette = "PRGn",
+  domain = c(0, 1.01),
+  reverse = TRUE
+)
+
+leaflet() %>%
+  setView(lat = vancouver_lat, lng = vancouver_lng, zoom = 11) %>%
+  addProviderTiles(providers$CartoDB.Positron) %>% # Plain basemap
+  addPolygons(
+    data = transit_buffers_overlap %>%
+               filter(line %in% c("Expo Line", "Millennium Line", "Canada Line")),
+    
+    # Fill
+    fillColor = ~pal(overlap_ratio),
+    fillOpacity = 1,
+    
+    # Stroke
+    color = "#444444",
+    weight = 1,
+    
+    # Labels
+    label = ~lapply(paste0(
+        "<strong>", stop_name_short, "</strong><br>",
+        "Overlap: ", round(overlap_ratio * 100, 1), "%"
+    ), htmltools::HTML),
+    
+    labelOptions = labelOptions(textsize = "14px"),
+    
+    # Highlighting
+    highlightOptions = highlightOptions(
+      weight = 2,
+      color = "#FFFFFF",
+      fillOpacity = 1,
+      bringToFront = TRUE,
+    )
+  ) %>%
+  addLegend(
+    pal = pal_rev,
+    values = c(0, 1), # 
+    labFormat = labelFormat(transform = function(x) sort(x, decreasing = TRUE)),
+    title = "Overlap Ratio",
+    position = "bottomright",
+    opacity = 1
+  )
+```
+
+<br>
+For simplicity, only DBs which overlap ≥50% with a station buffer are kept.[^1]
+
+[^1]: The code and visualization for this section is inspired by Jens von Bergmann's [blog post](https://doodles.mountainmath.ca/blog/2022/05/21/nanaimo-station/) on Nanaimo station in Vancouver as well as Jacob Dawang's [blog post](https://www.jacobdawang.com/blog/2023/mckernan-belgravia-station/) on McKernan/Belgravia station in Edmonton.
+
+#### Dissemination Blocks included in analysis
+
+```{r}
+#| label: visualize-selected-overlaps-pop
+#| echo: false
+
+# Only keep DBs that are at least 50% within the station buffer
+transit_buffers_overlap <- transit_buffers_overlap %>%
+  filter(overlap_ratio > 0.5)
+
+# For visualization, select the full DBs that are above the overlap threshold
+# census_pop_selected <- census_pop %>%
+#   filter(GeoUID %in% transit_buffers_overlap$GeoUID)
+
+census_pop_skytrain <- census_pop %>%
+  filter(GeoUID %in% (transit_buffers_overlap %>%
+                        filter(line %in% c("Expo Line", "Millennium Line", "Canada Line")) %>%
+                        pull(GeoUID)))
+
+leaflet() %>%
+  setView(lat = vancouver_lat, lng = vancouver_lng, zoom = 11) %>%
+  addProviderTiles(providers$CartoDB.Positron) %>% # Plain basemap
+  addPolygons(
+    data = census_pop_skytrain,
+    
+    # Fill
+    fillColor = "darkred",
+    fillOpacity = 1,
+    
+    # Stroke
+    color = "#FFFFFF",
+    weight = 1,
+    
+  ) %>%
+  addPolygons(
+    data = transit_buffers %>%
+      filter(line %in% c("Expo Line", "Millennium Line", "Canada Line")),
+    
+    # Fill
+    fillOpacity = 0,
+    
+    # Stroke
+    color = "#000000",
+    weight = 4,
+    opacity = 1
+  )
+```
+
+<br>
+Afterwards, the DBs in each buffer can be combined by summing their populations.
+
+```{r}
+#| label: calculate-transit-walksheds-pop
+#| echo: false
+#| cache: true
+
+# Sum population for each walkshed
+transit_walkshed_population <- transit_buffers_overlap %>%
+  group_by(stop_name_short) %>%
+  summarise(
+    population_800m = sum(Population, na.rm = TRUE),
+    area_800m = sum(area_intersect, na.rm = TRUE),
+    density_800m = population_800m / (area_800m / 1e6)  # Convert m^2 to km^2
+    )
+
+# Remove polygon geometry
+transit_walkshed_population <- st_drop_geometry(transit_walkshed_population)
+
+# Join locations (point geometry)
+transit_walkshed_population <- selected_stops %>%
+  select(stop_name_short, geometry) %>%
+  inner_join(transit_walkshed_population, by = "stop_name_short")
+
+# Calculate population in 1000 people
+transit_walkshed_population <- transit_walkshed_population %>%
+  mutate(population_800m_scaled = round(population_800m / 1000))
+
+# Add line data again
+transit_walkshed_population <- transit_walkshed_population %>%
+  left_join(transit_lines, by = c("stop_name_short" = "transit_stop"))
+
+# Calculate lat and lng
+transit_walkshed_population <- transit_walkshed_population %>%
+  mutate(lng = st_coordinates(geometry)[,1],
+         lat = st_coordinates(geometry)[,2])
+```
+
+## Walkshed Populations
+
+With the calculations out of the way, the walkshed population for each station can be visualized as a circle whose area is proportional to the total population. For reference, the walkshed populations for the entire Fast and Frequent Transit Network are also shown. This includes the SkyTrain as well as Metro Vancouver's BRT-lite bus routes: the 99 B-Line and six RapidBus lines. The SeaBus terminals are not shown separately, as both are already included via their shared locations with SkyTrain and RapidBus stations.
+
+::: panel-tabset
+
+### SkyTrain
+
+```{r}
+#| label: visualize-skytrain-walksheds-pop
+#| echo: false
+
+transit_palette <- c("Expo Line" = "#005aaf", "Millennium Line" = "#ffce36", "Canada Line" = "#00a2ce", "B-Line" = "#ff7322", "RapidBus" = "darkgreen")
+
+# Add colour palette
+transit_walkshed_population <- transit_walkshed_population %>%
+  mutate(colour = transit_palette[line])
+
+skytrain_walkshed_population <- transit_walkshed_population %>%
+  filter(line %in% c("Expo Line", "Millennium Line", "Canada Line"))
+
+leaflet() %>%
+  setView(lat = vancouver_lat, lng = vancouver_lng, zoom = 11) %>%
+  addProviderTiles(providers$CartoDB.Positron) %>% # Simple basemap
+  addPolylines(data = skytrain_lines, color = "grey", weight = 3, opacity = 1) %>%
+  addMinicharts(
+    skytrain_walkshed_population$lng, skytrain_walkshed_population$lat,
+    chartdata = skytrain_walkshed_population$population_800m_scaled,
+    type = "polar-area",
+    showLabels = TRUE,
+    width = 50,
+    fillColor = skytrain_walkshed_population$colour,
+    popup = popupArgs(
+      html = paste0(
+        "<strong>", skytrain_walkshed_population$stop_name_short, "</strong><br>",
+        "Walkshed: ", skytrain_walkshed_population$population_800m, " people<br>",
+        "Density: ", round(skytrain_walkshed_population$density_800m), " people/sq km<br>"
+      )
+    )
+  ) %>%
+  addLegend(
+  position = "bottomright",
+  colors = c("#005aaf", "#ffce36", "#00a2ce"),
+  labels = c("Expo Line", "Millennium Line", "Canada Line"),
+  title = "SkyTrain Line",
+  opacity = 1
+)
+
+```
+
+::: callout-note
+Population in 1000 people.
+:::
+
+### All Fast and Frequent Transit
+
+```{r}
+#| label: visualize-transit-walksheds-pop
+#| echo: false
+
+leaflet() %>%
+  setView(lat = vancouver_lat, lng = vancouver_lng, zoom = 11) %>%
+  addProviderTiles(providers$CartoDB.Positron) %>% # Simple basemap
+  addPolylines(data = skytrain_lines, color = "grey", weight = 3, opacity = 1) %>%
+  addPolylines(data = bus_seabus_lines, color = "grey", weight = 2, opacity = 1) %>%
+  addMinicharts(
+    transit_walkshed_population$lng, transit_walkshed_population$lat,
+    chartdata = transit_walkshed_population$population_800m_scaled,
+    type = "polar-area",
+    showLabels = TRUE,
+    width = 50,
+    fillColor = transit_walkshed_population$colour,
+    popup = popupArgs(
+      html = paste0(
+        "<strong>", transit_walkshed_population$stop_name_short, "</strong><br>",
+        "Walkshed: ", transit_walkshed_population$population_800m, " people<br>",
+        "Density: ", round(transit_walkshed_population$density_800m), " people/sq km<br>"
+      )
+    )
+  ) %>%
+  addLegend(
+  position = "bottomright",
+  colors = c("#005aaf", "#ffce36", "#00a2ce", "#ff7322", "darkgreen"),
+  labels = c("Expo Line", "Millennium Line", "Canada Line", "B-Line", "RapidBus"),
+  title = "Transit Line",
+  opacity = 1
+)
+```
+
+::: callout-note
+Population in 1000 people.
+:::
+
+:::
+
+The dominance of Downtown Vancouver is reaffirmed by its large station walksheds, with Yaletown–Roundhouse topping the list—over 40,000 residents live within a 10-minute walk. Across the rail network, few other stations come close, with only Metrotown, Joyce–Collingwood, and Richmond–Brighouse truly standing out. Unsurprisingly to many locals, a notable absence of dense housing surrounds East Vancouver stations, situated between Downtown and growing hubs in Burnaby including Metrotown and Brentwood.
+
+Among the three SkyTrain lines, the Expo Line clearly leads in total walkshed population, thanks to several population centres growing along its route. The Millennium Line, by contrast, has much smaller walksheds—particularly through its central segment. Its alignment along Lougheed Highway and adjacency to industrial lands restrict opportunities for nearby housing. The Canada Line stations, too, have room to grow before they come close to the Expo Line.
+
+When the analysis is expanded to include BRT-lite lines, the 99 B-Line's Central Broadway emerges as the most promising corridor. This is also where the Millennium Line extension is currently under construction, terminating at Arbutus Street. Beyond that point, as the 99 B-Line continues toward UBC, walkshed populations decline sharply. Transit-oriented development (TOD) at future stations—particularly the large-scale [Jericho Lands redevelopment](https://www.shapeyourcity.ca/jericho-lands)—promises to address the corridor’s low-density gaps.
+
+The RapidBus network shows a mixed picture. Hastings St in Vancouver and Burnaby, along with Scott Road and 104 Avenue in Surrey, stand out as strong performers. In contrast, the Marine–Main corridor in North Vancouver and Lougheed Highway in the eastern suburbs register significantly lower population coverage. West 41st Avenue in Vancouver—like the western stretch of Broadway—suffers from even low densities in the West Side.
+
+Lastly, Fraser Highway—though currently lacking a RapidBus route—is the focus of major transit investment, with the Expo Line set to extend all the way to Langley City. Today, its station walksheds trail behind other South-of-Fraser corridors in terms of population coverage. While the arrival of SkyTrain presents clear opportunities for growth, much of the surrounding area is constrained by protected agricultural land, limiting large-scale redevelopment.
+
+![Walkshed Populations for the Expo Line Fraser Highway Extension (Population in 1000 people)](data/sls.png)
+
+## Walkshed Modal Shares
+
+Having mapped out the population within SkyTrain station walksheds, the next question is: how do people in these areas actually choose to commute? Jens von Bergmann has explored this using census data from [2011](https://doodles.mountainmath.ca/posts/2016-04-20-tod-mode-share/) and [2016](https://doodles.mountainmath.ca/posts/2021-10-03-fixing-parking/index.html).
+
+First, let's look at the mode share for private automobiles across the SkyTrain station walksheds. Note that commuting data is not reported at the Dissemination Block (DB) level; the smallest geographical level for which it is available is the Dissemination Area (DA), so the walksheds used here are a bit more crude.
+
+```{r}
+#| label: get-census-data-mode-share
+#| echo: false
+#| message: false
+
+census_mode_share <- get_census(dataset = "CA21",
+                         regions = list(CMA = "59933"), # Metro Vancouver CMA
+                         vectors = c(total = "v_CA21_7632", transit = "v_CA21_7644", walk = "v_CA21_7647", bicycle = "v_CA21_7650", car = "v_CA21_7635", other = "v_CA21_7653"), 
+                         level = "DA",
+                         use_cache = TRUE,
+                         geo_format = "sf")
+```
+
+```{r}
+#| label: create-station-buffers-mode-share
+#| echo: false
+#| warning: false
+#| cache: true
+
+# Get area of each census DA
+census_mode_share <- census_mode_share %>%
+  mutate(area = as.numeric(st_area(.)))
+
+station_buffers <- transit_buffers %>%
+  filter(line %in% c("Expo Line", "Millennium Line", "Canada Line"))
+
+# Intersect census data with station buffers
+station_buffers_overlap <- st_intersection(census_mode_share, station_buffers)
+
+# Calculate how much of each station buffer overlaps with a census DA
+station_buffers_overlap <- station_buffers_overlap %>%
+  mutate(
+    area_intersect = as.numeric(st_area(.)),
+    overlap_ratio = area_intersect / area
+  ) 
+
+# Only keep DAs that are at least 50% within the station buffer
+station_buffers_overlap <- station_buffers_overlap %>%
+  filter(overlap_ratio > 0.5)
+```
+
+```{r}
+#| label: calculate-station-mode-shares
+#| echo: false
+#| cache: true
+
+# Calculate modeshare for each station walkshed
+skytrain_walkshed_mode_share <- station_buffers_overlap %>%
+  group_by(stop_name_short) %>%
+  summarise(
+    commuter_total = sum(total, na.rm = TRUE),
+    transit_total = sum(transit, na.rm = TRUE),
+    walk_total = sum(walk, na.rm = TRUE),
+    bicycle_total = sum(bicycle, na.rm = TRUE),
+    car_total =  sum(car, na.rm = TRUE),
+    other_total = sum(other, na.rm = TRUE)
+  )
+
+# Calculate mode share categories
+skytrain_walkshed_mode_share <- skytrain_walkshed_mode_share %>%
+  mutate(
+    # Categories
+    sustainable_mobility = transit_total + walk_total + bicycle_total,
+    car_other = car_total + other_total,
+    
+    # Ratios
+    perc_sustainable_mobility = sustainable_mobility / commuter_total,
+    perc_car_other = car_total / commuter_total,
+    perc_driving = car_total / commuter_total
+  )
+```
+
+```{r}
+#| label: visualize-car-mode-share
+#| echo: false
+
+pal <- colorBin(
+  palette = "PiYG",
+  domain = c(0, 1.01),
+  # bins = 5,
+  bins = c(0, 0.25, 0.35, 0.45, 0.50, 0.55, 0.65, 0.75, 1),
+  reverse = TRUE
+)
+
+pal_rev <- colorBin(
+  palette = "PiYG",
+  domain = c(0, 1.01),
+  bins = c(0, 0.25, 0.35, 0.45, 0.50, 0.55, 0.65, 0.75, 1)
+)
+
+leaflet() %>%
+  setView(lat = vancouver_lat, lng = vancouver_lng, zoom = 11) %>%
+  addProviderTiles(providers$CartoDB.Positron) %>% # Plain basemap
+  addPolygons(
+    data = skytrain_walkshed_mode_share,
+    
+    # Fill
+    fillColor = ~pal(perc_driving),
+    fillOpacity = 1,
+    
+    # Stroke
+    color = "#444444",
+    weight = 1,
+    
+    # Labels
+    # label = labels,
+    label = ~lapply(paste0(
+      "<strong>", stop_name_short, "</strong><br>",
+      "Car mode share: ", round(perc_driving * 100, 1), "%"
+    ), htmltools::HTML),
+    labelOptions = labelOptions(textsize = "14px"),
+    
+    # Highlighting
+    highlightOptions = highlightOptions(
+      weight = 2,
+      color = "#FFFFFF",
+      fillOpacity = 1,
+      bringToFront = TRUE,
+    )
+  )%>%
+  addLegend(
+    pal = pal_rev,
+    values = c(0, 1),
+    labFormat = labelFormat(
+      prefix = "(", suffix = ")%", between = ", ",
+      transform = function(x) rev(100 * x)
+    ),
+    title = "Car mode share",
+    position = "bottomright",
+    opacity = 1
+  )
+```
+
+<br>
+It appears that car mode share has increased slightly in the suburbs compared to von Bergmann’s 2016 analysis—though it's worth noting that the method used to generate walkshed populations differs somewhat.
+
+Still, the most “car-free” stations remain concentrated near the downtown core. In contrast, many established population hubs, particularly along the Millennium Line, are notably car-dependent. These stations often sit adjacent to (or directly on) major arterials like Lougheed Highway and Barnet Highway, where convenient vehicular access and ample residential parking reduce the friction of choosing to drive.
+
+By comparison, stations tucked away from busy road corridors, such as Joyce–Collingwood, Patterson, and Metrotown, tend to have much lower car mode shares.
+
+Next, let's take a look at the complete commuting picture and how the different modes compare across SkyTrain stations.
+
+::: panel-tabset
+
+### All Modes
+
+```{r}
+#| label: visualize-station-walksheds-mode-share
+#| echo: false
+
+# Remove polygon geometry
+skytrain_walkshed_mode_share_no_geo <- st_drop_geometry(skytrain_walkshed_mode_share)
+
+# Join station locations (point geometry)
+skytrain_walkshed_mode_share_no_geo <- skytrain_stations %>%
+  select(stop_name_short, geometry) %>%
+  inner_join(skytrain_walkshed_mode_share_no_geo, by = "stop_name_short")
+
+# Calculate lat and lng
+skytrain_walkshed_mode_share_no_geo <- skytrain_walkshed_mode_share_no_geo %>%
+  mutate(lng = st_coordinates(geometry)[,1],
+         lat = st_coordinates(geometry)[,2])
+
+# Remove spatial attributes
+skytrain_walkshed_mode_share_no_geo <- skytrain_walkshed_mode_share_no_geo %>%
+  st_drop_geometry()  
+
+mode_palette <- c("#0072B2", "#D55E00", "#009E73", "#F0E442" ,"#999999")
+
+leaflet() %>%
+  setView(lat = vancouver_lat, lng = vancouver_lng, zoom = 11) %>%
+  addProviderTiles(providers$CartoDB.Positron) %>%
+  addPolylines(data = skytrain_lines, color = "black", weight = 3, opacity = 1) %>%
+  addMinicharts(
+    skytrain_walkshed_mode_share_no_geo$lng, skytrain_walkshed_mode_share_no_geo$lat,
+    type = "pie",
+    chartdata = skytrain_walkshed_mode_share_no_geo[, c("transit_total", "car_total", "walk_total", "bicycle_total", "other_total")],
+    colorPalette = mode_palette,
+    width = 40,
+    popup = popupArgs(
+      labels = c("Transit", "Car", "Walking", "Bicycle", "Other"),
+      html = paste0(
+        "<div style='font-size:14px;'>",
+        "<strong>", skytrain_walkshed_mode_share$stop_name_short, "</strong><br>",
+        "Transit: ", skytrain_walkshed_mode_share$transit_total,
+        " (", round(100 * (skytrain_walkshed_mode_share$transit_total / skytrain_walkshed_mode_share$commuter_total)), "%)<br>",
+        "Car: ", skytrain_walkshed_mode_share$car_total, 
+        " (", round(100 * (skytrain_walkshed_mode_share$car_total / skytrain_walkshed_mode_share$commuter_total)), "%)<br>",
+        "Walking: ", skytrain_walkshed_mode_share$walk_total,
+        " (", round(100 * (skytrain_walkshed_mode_share$walk_total / skytrain_walkshed_mode_share$commuter_total)), "%)<br>",
+        "Bicycle: ", skytrain_walkshed_mode_share$bicycle_total,
+        " (", round(100 * (skytrain_walkshed_mode_share$bicycle_total / skytrain_walkshed_mode_share$commuter_total)), "%)<br>",
+        "Other: ", skytrain_walkshed_mode_share$other_total,
+        " (", round(100 * (skytrain_walkshed_mode_share$other_total / skytrain_walkshed_mode_share$commuter_total)), "%)"
+      )
+    )
+  )
+```
+
+### Amalgamated Modes
+
+```{r}
+#| label: visualize-station-walksheds-mode-share-amalgamated
+#| echo: false
+
+mode_palette_amalgamated <- c("#0072B2", "#D55E00")
+
+leaflet() %>%
+  setView(lat = vancouver_lat, lng = vancouver_lng, zoom = 11) %>%
+  addProviderTiles(providers$CartoDB.Positron) %>%
+  addPolylines(data = skytrain_lines, color = "black", weight = 3, opacity = 1) %>%
+  addMinicharts(
+    skytrain_walkshed_mode_share_no_geo$lng, skytrain_walkshed_mode_share_no_geo$lat,
+    type = "pie",
+    chartdata = skytrain_walkshed_mode_share_no_geo[, c("sustainable_mobility", "car_other")],
+    colorPalette = mode_palette_amalgamated,
+    width = 40,
+    popup = popupArgs(
+      labels = c("Sustainable Mobility (Transit, Walk, Bicycle)", "Car + Other"),
+      html = paste0(
+        "<div style='font-size:14px;'>",
+        "<strong>", skytrain_walkshed_mode_share$stop_name_short, "</strong><br>",
+        "Sustainable mobility: ", skytrain_walkshed_mode_share$sustainable_mobility, 
+        " (", round(100 * skytrain_walkshed_mode_share$perc_sustainable_mobility), "%)<br>",
+        "Car + Other: ", skytrain_walkshed_mode_share$car_other,
+        " (", round(100 * skytrain_walkshed_mode_share$perc_car_other), "%)"
+      )
+    )
+  )
+```
+
+:::
+
+Interestingly, walking—not transit—is the dominant sustainable commuting mode in Downtown Vancouver. This makes intuitive sense given the short travel distances for residents of neighbourhoods like Yaletown and the West End. It’s also shaped by practical realities: bus service on routes 5 and 6 through the West End is notoriously slow, likely making walking the more convenient choice for many.
+
+Transit is a stronger choice outside the downtown peninsula and in the suburbs, although the Millennium Line lags behind, especially through industrial Burnaby and along the Evergreen Extension.
