@@ -393,7 +393,7 @@ Among the three SkyTrain lines, the Expo Line clearly leads in total walkshed po
 
 When the analysis is expanded to include BRT-lite lines, the 99 B-Line's Central Broadway emerges as the most promising corridor. This is also where the Millennium Line extension is currently under construction, terminating at Arbutus Street. Beyond that point, as the 99 B-Line continues toward UBC, walkshed populations decline sharply. Transit-oriented development (TOD) at future stations—particularly the large-scale [Jericho Lands redevelopment](https://www.shapeyourcity.ca/jericho-lands)—promises to address the corridor’s low-density gaps.
 
-The RapidBus network shows a mixed picture. Hastings St in Vancouver and Burnaby, along with Scott Road and 104 Avenue in Surrey, stand out as strong performers. In contrast, the Marine–Main corridor in North Vancouver and Lougheed Highway in the eastern suburbs register significantly lower population coverage. West 41st Avenue in Vancouver—like the western stretch of Broadway—suffers from even low densities in the West Side.
+The RapidBus network shows a mixed picture. Hastings St in Vancouver and Burnaby, along with Scott Road and 104 Avenue in Surrey, stand out as strong performers. In contrast, the Marine–Main corridor in North Vancouver and Lougheed Highway in the eastern suburbs register significantly lower population coverage. West 41st Avenue in Vancouver—like the western stretch of Broadway—suffers from low densities in the West Side.
 
 Lastly, Fraser Highway—though currently lacking a RapidBus route—is the focus of major transit investment, with the Expo Line set to extend all the way to Langley City. Today, its station walksheds trail behind other South-of-Fraser corridors in terms of population coverage. While the arrival of SkyTrain presents clear opportunities for growth, much of the surrounding area is constrained by protected agricultural land, limiting large-scale redevelopment.
 
@@ -404,6 +404,7 @@ Lastly, Fraser Highway—though currently lacking a RapidBus route—is the focu
 Having mapped out the population within SkyTrain station walksheds, the next question is: how do people in these areas actually choose to commute? Jens von Bergmann has explored this using census data from [2011](https://doodles.mountainmath.ca/posts/2016-04-20-tod-mode-share/) and [2016](https://doodles.mountainmath.ca/posts/2021-10-03-fixing-parking/index.html).
 
 First, let's look at the mode share for private automobiles across the SkyTrain station walksheds. Note that commuting data is not reported at the Dissemination Block (DB) level; the smallest geographical level for which it is available is the Dissemination Area (DA), so the walksheds used here are a bit more crude.
+
 
 ```{r}
 #| label: get-census-data-mode-share
