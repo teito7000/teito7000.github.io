@@ -54,4 +54,4 @@ Additionally, transit priority measures are key to ensuring that buses and train
 
 ## Acknowledgements
 
-Inspiration for this project came from a blog post written by John Ivison (no, not the National Post columnist). While I hope my mapping highlights the untapped potential for public transit along British Columbia's highways, readers are encouraged to read John's [post](https://blog.jivison.dev/a-new-vision-for-intercity-transit-in-bc/) for a more in-depth exploration of what an intercity transit network could entail, including the various constituent routes.
+Inspiration for this project came from a blog post written by Abby Ivison. While I hope my mapping highlights the untapped potential for public transit along British Columbia's highways, readers are encouraged to read Abby's [post](https://blog.jivison.dev/a-new-vision-for-intercity-transit-in-bc/) for a more in-depth exploration of what an intercity transit network could entail, including the various constituent routes.
