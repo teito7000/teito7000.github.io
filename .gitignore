@@ -6,3 +6,5 @@ projects/**/data/
 *_cache/
 
 /.quarto/
+
+**/*.quarto_ipynb

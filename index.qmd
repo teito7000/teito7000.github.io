@@ -1,6 +1,6 @@
 ---
 title: "Ahasan Bhuiyan"
-image: files/profile.jpg
+image: files/2026_profile.jpg
 about:
   template: jolla
   image-shape: round
